@@ -1,0 +1,12 @@
+Id: new_email
+From: System
+Sender-IP: 127.0.0.1
+Sender-Port: 5000
+To: anh123
+Subject: Thank you for using this service. we hope that you will feel comfortabl........
+Date: 2026-10-01 22:59:53
+Read: true
+Folder: INBOX
+
+---BODY---
+Thank you for using this service. we hope that you will feel comfortabl........
