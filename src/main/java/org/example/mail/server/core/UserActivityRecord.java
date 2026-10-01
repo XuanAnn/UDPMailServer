@@ -24,7 +24,7 @@ public class UserActivityRecord {
         this.logoutTime = "-";
         this.clientIp = "-";
         this.clientPort = 0;
-        this.currentActivity = "Chưa có hoạt động";
+        this.currentActivity = "Chờ";
         this.lastActiveTime = "-";
     }
 

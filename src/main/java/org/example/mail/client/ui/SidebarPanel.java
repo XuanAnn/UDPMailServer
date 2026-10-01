@@ -14,7 +14,7 @@ import java.util.function.Consumer;
 
 public class SidebarPanel extends JPanel {
 
-    private final AntButton btnCompose = AntDesign.createPrimaryButton("✏ Soạn thư (Compose)");
+    private final AntButton btnCompose = AntDesign.createPrimaryButton("Soạn thư");
     private final DefaultListModel<FolderItem> folderModel = new DefaultListModel<>();
     private final JList<FolderItem> folderList = new JList<>(folderModel);
 
@@ -64,10 +64,10 @@ public class SidebarPanel extends JPanel {
         add(top, BorderLayout.NORTH);
 
         // Folders List (Ant Design Navigation Menu style)
-        addFolder(Protocol.FOLDER_INBOX, "Hộp thư đến (Inbox)", "📥");
-        addFolder(Protocol.FOLDER_SENT, "Đã gửi (Sent)", "📤");
-        addFolder(Protocol.FOLDER_DRAFTS, "Thư nháp (Drafts)", "📝");
-        addFolder(Protocol.FOLDER_TRASH, "Thùng rác (Trash)", "🗑");
+        addFolder(Protocol.FOLDER_INBOX, "Hộp thư đến", "📥");
+        addFolder(Protocol.FOLDER_SENT, "Đã gửi", "📤");
+        addFolder(Protocol.FOLDER_DRAFTS, "Thư nháp", "📝");
+        addFolder(Protocol.FOLDER_TRASH, "Thùng rác", "🗑");
 
         folderList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         folderList.setSelectedIndex(0);

@@ -22,17 +22,17 @@ public class ServerConfigDialog extends JDialog {
     private final JTextField txtPort = new JTextField();
     private final JTextField txtDataPath = new JTextField();
     private final JTextField txtTimeout = new JTextField();
-    private final JCheckBox chkAutoStart = new JCheckBox("Auto-start server when application launches");
-    private final JCheckBox chkReportEnabled = new JCheckBox("Enable Email & Performance Statistics Report");
+    private final JCheckBox chkAutoStart = new JCheckBox("Tự chạy khi mở");
+    private final JCheckBox chkReportEnabled = new JCheckBox("Bật thống kê");
 
     private final ServerConfig config;
     private boolean saved = false;
 
     public ServerConfigDialog(Frame owner, ServerConfig config, boolean isServerRunning) {
-        super(owner, "Server Configuration - Ant Design", true);
+        super(owner, "Cấu hình máy chủ", true);
         this.config = config;
 
-        setSize(520, 420);
+        setSize(500, 400);
         setLocationRelativeTo(owner);
         setLayout(new BorderLayout());
         getContentPane().setBackground(AntDesign.BG_CONTAINER);
@@ -44,7 +44,7 @@ public class ServerConfigDialog extends JDialog {
                 BorderFactory.createMatteBorder(0, 0, 1, 0, AntDesign.BORDER_SPLIT),
                 new EmptyBorder(14, 20, 14, 20)
         ));
-        JLabel titleLbl = new JLabel("⚙ Cấu Hình Máy Chủ (Server Settings)");
+        JLabel titleLbl = new JLabel("Cấu hình máy chủ");
         titleLbl.setFont(AntDesign.FONT_TITLE);
         titleLbl.setForeground(AntDesign.TEXT_PRIMARY);
         headerPanel.add(titleLbl, BorderLayout.WEST);
@@ -69,7 +69,7 @@ public class ServerConfigDialog extends JDialog {
         txtPort.setText(String.valueOf(config.getPort()));
         if (isServerRunning) {
             txtPort.setEnabled(false);
-            txtPort.setToolTipText("Cannot change port while server is running. Stop server first.");
+            txtPort.setToolTipText("Không thể đổi port khi server đang chạy");
         }
         txtDataPath.setText(config.getDataPath());
         txtTimeout.setText(String.valueOf(config.getTimeoutMs()));
@@ -82,9 +82,9 @@ public class ServerConfigDialog extends JDialog {
         chkReportEnabled.setFont(AntDesign.FONT_BODY);
         chkReportEnabled.setOpaque(false);
 
-        addFormField(formPanel, gbc, 0, "Bind IP Address:", txtBindAddress);
-        addFormField(formPanel, gbc, 1, "UDP Port (1024-65535):", txtPort);
-        addFormField(formPanel, gbc, 2, "Data Directory Path:", txtDataPath);
+        addFormField(formPanel, gbc, 0, "Địa chỉ IP:", txtBindAddress);
+        addFormField(formPanel, gbc, 1, "Cổng UDP:", txtPort);
+        addFormField(formPanel, gbc, 2, "Thư mục dữ liệu:", txtDataPath);
         addFormField(formPanel, gbc, 3, "Timeout (ms):", txtTimeout);
 
         gbc.gridx = 0; gbc.gridy = 4; gbc.gridwidth = 2;
@@ -104,14 +104,14 @@ public class ServerConfigDialog extends JDialog {
         ));
 
         String localLanIp = NetworkUtils.getLocalIPv4Address();
-        AntTag lanTag = AntDesign.createTag("LAN Host IP: " + localLanIp, TagColor.PROCESSING);
+        AntTag lanTag = AntDesign.createTag("IP: " + localLanIp, TagColor.PROCESSING);
         bottomArea.add(lanTag, BorderLayout.WEST);
 
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         btnPanel.setOpaque(false);
 
-        AntButton btnCancel = AntDesign.createDefaultButton("Hủy (Cancel)");
-        AntButton btnSave = AntDesign.createPrimaryButton("Lưu cấu hình (Save)");
+        AntButton btnCancel = AntDesign.createDefaultButton("Hủy");
+        AntButton btnSave = AntDesign.createPrimaryButton("Lưu");
 
         btnPanel.add(btnCancel);
         btnPanel.add(btnSave);

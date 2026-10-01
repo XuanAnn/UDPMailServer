@@ -30,13 +30,13 @@ public class ServerManagerUI extends JFrame {
     private MailServer server;
 
     // UI Components - Ant Design Control Buttons
-    private final AntButton btnStart = AntDesign.createSuccessButton("▶ Start Server");
-    private final AntButton btnStop = AntDesign.createDangerButton("⏹ Stop Server");
-    private final AntButton btnRestart = AntDesign.createPrimaryButton("🔄 Restart Server");
-    private final AntButton btnConfig = AntDesign.createDefaultButton("⚙ Configuration");
-    private final AntButton btnAbout = AntDesign.createDefaultButton("ℹ About");
-    private final JCheckBox chkAutoStart = new JCheckBox("Auto Start");
-    private final JCheckBox chkEmailReport = new JCheckBox("Enable Email Report", true);
+    private final AntButton btnStart = AntDesign.createSuccessButton("Khởi động");
+    private final AntButton btnStop = AntDesign.createDangerButton("Dừng");
+    private final AntButton btnRestart = AntDesign.createPrimaryButton("Khởi động lại");
+    private final AntButton btnConfig = AntDesign.createDefaultButton("Cấu hình");
+    private final AntButton btnAbout = AntDesign.createDefaultButton("Thông tin");
+    private final JCheckBox chkAutoStart = new JCheckBox("Tự chạy");
+    private final JCheckBox chkEmailReport = new JCheckBox("Báo cáo", true);
 
     // Status Badges (AntTag based)
     private final JLabel lblSocketStatus = new JLabel("STOPPED");
@@ -57,13 +57,13 @@ public class ServerManagerUI extends JFrame {
     private final DefaultTableModel userStatusTableModel = new DefaultTableModel(
             new String[]{
                     "Tài khoản",
-                    "Đã kết nối",
-                    "Đã đăng ký",
-                    "Đã đăng nhập",
-                    "Giờ vào (Login)",
-                    "Giờ ra (Logout)",
-                    "Đang làm gì (Kèm IP & Port)",
-                    "Cập nhật cuối"
+                    "Kết nối",
+                    "Đăng ký",
+                    "Đăng nhập",
+                    "Giờ vào",
+                    "Giờ ra",
+                    "Hoạt động",
+                    "Thời gian"
             }, 0
     ) {
         @Override
@@ -76,7 +76,7 @@ public class ServerManagerUI extends JFrame {
 
     // 2. Account list table for live demo
     private final DefaultTableModel accountTableModel = new DefaultTableModel(
-            new String[]{"Username", "Password (Demo)", "Created At", "Status"}, 0
+            new String[]{"Tài khoản", "Mật khẩu", "Ngày tạo", "Trạng thái"}, 0
     ) {
         @Override
         public boolean isCellEditable(int row, int column) {
@@ -88,9 +88,9 @@ public class ServerManagerUI extends JFrame {
     private Timer statsTimer;
 
     public ServerManagerUI() {
-        setTitle("Java UDP Mail Server Manager - Ant Design Edition v" + Protocol.VERSION);
-        setSize(1140, 780);
-        setMinimumSize(new Dimension(940, 620));
+        setTitle("UDP Mail Server Manager - v" + Protocol.VERSION);
+        setSize(1260, 800);
+        setMinimumSize(new Dimension(1000, 650));
         setLocationRelativeTo(null);
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 
@@ -184,7 +184,7 @@ public class ServerManagerUI extends JFrame {
         lblInfoIcon.setFont(AntDesign.font(15f, Font.BOLD));
         lanLeft.add(lblInfoIcon);
 
-        JLabel lblLanTag = new JLabel("Server Host LAN IPv4:");
+        JLabel lblLanTag = new JLabel("Server IP:");
         lblLanTag.setFont(AntDesign.FONT_BODY_BOLD);
         lblLanTag.setForeground(AntDesign.PRIMARY);
         lanLeft.add(lblLanTag);
@@ -197,21 +197,16 @@ public class ServerManagerUI extends JFrame {
         AntDesign.styleInput(txtLan);
         lanLeft.add(txtLan);
 
-        AntButton btnCopyLan = AntDesign.createDefaultButton("📋 Copy IP");
+        AntButton btnCopyLan = AntDesign.createDefaultButton("Sao chép");
         btnCopyLan.addActionListener(e -> {
             Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(localIPv4), null);
-            JOptionPane.showMessageDialog(this, "Copied Server LAN IPv4 to clipboard: " + localIPv4, "Copied", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Đã sao chép IP: " + localIPv4, "Thông báo", JOptionPane.INFORMATION_MESSAGE);
         });
         lanLeft.add(btnCopyLan);
 
-        JLabel lblLanInstruct = new JLabel("← Nhập IP này tại ô 'Server' trên các máy Client trong mạng LAN để kết nối");
-        lblLanInstruct.setFont(AntDesign.FONT_SMALL);
-        lblLanInstruct.setForeground(AntDesign.TEXT_SECONDARY);
-        lanLeft.add(lblLanInstruct);
-
         lanAlert.add(lanLeft, BorderLayout.WEST);
 
-        AntTag portBadge = AntDesign.createTag("Port: " + config.getPort() + " (UDP)", TagColor.PROCESSING);
+        AntTag portBadge = AntDesign.createTag("Port: " + config.getPort(), TagColor.PROCESSING);
         lanAlert.add(portBadge, BorderLayout.EAST);
 
         JPanel topBars = new JPanel(new GridLayout(2, 1, 0, 8));
@@ -221,14 +216,14 @@ public class ServerManagerUI extends JFrame {
         topPanel.add(topBars, BorderLayout.NORTH);
 
         // 3. Status Cards Row (Ant Design Cards)
-        lblPortInfo.setText("Port: " + config.getPort() + " | LAN: " + localIPv4);
+        lblPortInfo.setText("Port: " + config.getPort());
         JPanel statusCardsPanel = new JPanel(new GridLayout(1, 4, 10, 0));
         statusCardsPanel.setOpaque(false);
 
-        statusCardsPanel.add(createStatusCard("UDP Server Socket", lblSocketStatus, lblPortInfo));
-        statusCardsPanel.add(createStatusCard("Account Service", lblAccountService, new JLabel("Storage: accounts/")));
-        statusCardsPanel.add(createStatusCard("Auth Service", lblAuthService, new JLabel("Session Token Auth")));
-        statusCardsPanel.add(createStatusCard("Mail Service", lblMailService, new JLabel("Storage: accounts/<user>/")));
+        statusCardsPanel.add(createStatusCard("Socket UDP", lblSocketStatus, lblPortInfo));
+        statusCardsPanel.add(createStatusCard("Tài khoản", lblAccountService, new JLabel("accounts/")));
+        statusCardsPanel.add(createStatusCard("Xác thực", lblAuthService, new JLabel("Session Token")));
+        statusCardsPanel.add(createStatusCard("Hộp thư", lblMailService, new JLabel("accounts/<user>/")));
 
         topPanel.add(statusCardsPanel, BorderLayout.SOUTH);
         add(topPanel, BorderLayout.NORTH);
@@ -238,22 +233,18 @@ public class ServerManagerUI extends JFrame {
         tabbedPane.setFont(AntDesign.FONT_BODY_BOLD);
         tabbedPane.setBackground(AntDesign.BG_LAYOUT);
 
-        // Tab 1: Live User Status & Activity (Status Tổng Thể - Mặc định hiển thị trên cùng)
-        tabbedPane.addTab("🟢 Trạng Thái Người Dùng Tổng Thể (Live User Status)", createOverallStatusPanel());
+        // Tab 1: Live User Status & Activity (Status Tổng Thể)
+        tabbedPane.addTab("Người dùng", createOverallStatusPanel());
 
-        // Tab 2: Accounts & Credentials (Demo Helper)
+        // Tab 2: Accounts & Credentials
         JPanel accountPanel = new JPanel(new BorderLayout(5, 5));
         accountPanel.setBackground(AntDesign.BG_CONTAINER);
         accountPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
         JPanel accTop = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 4));
         accTop.setOpaque(false);
-        AntButton btnRefreshAcc = AntDesign.createPrimaryButton("🔄 Refresh Accounts");
+        AntButton btnRefreshAcc = AntDesign.createPrimaryButton("Làm mới");
         accTop.add(btnRefreshAcc);
-        JLabel lblAccHelp = new JLabel("(Shows stored accounts and plaintext passwords for instructor / demo evaluation)");
-        lblAccHelp.setFont(AntDesign.FONT_SMALL);
-        lblAccHelp.setForeground(AntDesign.TEXT_SECONDARY);
-        accTop.add(lblAccHelp);
         btnRefreshAcc.addActionListener(e -> refreshAccountsTable());
         accountPanel.add(accTop, BorderLayout.NORTH);
 
@@ -264,11 +255,11 @@ public class ServerManagerUI extends JFrame {
         JScrollPane accScroll = new JScrollPane(accountTable);
         accScroll.setBorder(BorderFactory.createLineBorder(AntDesign.BORDER_SPLIT, 1));
         accountPanel.add(accScroll, BorderLayout.CENTER);
-        tabbedPane.addTab("👥 Accounts & Credentials (Demo)", accountPanel);
+        tabbedPane.addTab("Tài khoản", accountPanel);
 
         // Tab 3: Detailed Email Report & Metrics
         JPanel reportPanel = createReportPanel();
-        tabbedPane.addTab("📊 Email Report & Statistics", reportPanel);
+        tabbedPane.addTab("Thống kê", reportPanel);
 
         // Compact Terminal Panel (Thu nhỏ terminal console bên dưới)
         JPanel compactTerminal = createCompactTerminalPanel();
@@ -290,12 +281,12 @@ public class ServerManagerUI extends JFrame {
                 BorderFactory.createMatteBorder(1, 0, 0, 0, AntDesign.BORDER_SPLIT),
                 new EmptyBorder(6, 16, 6, 16)
         ));
-        JLabel lblLeft = new JLabel("🌐 Server Host IPv4: " + localIPv4 + " | Port: " + config.getPort() + " | Bind: " + config.getBindAddress() + " (All LAN Interfaces)");
+        JLabel lblLeft = new JLabel("IP: " + localIPv4 + " | Port: " + config.getPort());
         lblLeft.setFont(AntDesign.FONT_SMALL_BOLD);
         lblLeft.setForeground(AntDesign.TEXT_PRIMARY);
         statusBar.add(lblLeft, BorderLayout.WEST);
 
-        JLabel lblCopy = new JLabel("Java UDP Mail Server • Ant Design Edition • Reliable UDP v" + Protocol.VERSION);
+        JLabel lblCopy = new JLabel("UDP Mail Server v" + Protocol.VERSION);
         lblCopy.setForeground(AntDesign.TEXT_TERTIARY);
         lblCopy.setFont(AntDesign.FONT_SMALL);
         statusBar.add(lblCopy, BorderLayout.EAST);
@@ -333,12 +324,12 @@ public class ServerManagerUI extends JFrame {
         panel.setBackground(AntDesign.BG_LAYOUT);
         panel.setBorder(new EmptyBorder(16, 16, 16, 16));
 
-        panel.add(AntDesign.createStatisticCard("Total Emails Sent", lblStatSent, AntDesign.SUCCESS));
-        panel.add(AntDesign.createStatisticCard("Total Emails Received", lblStatReceived, AntDesign.PRIMARY));
-        panel.add(AntDesign.createStatisticCard("Registered Accounts", lblStatAccounts, new Color(114, 46, 209)));
-        panel.add(AntDesign.createStatisticCard("Active User Sessions", lblStatSessions, new Color(19, 194, 194)));
-        panel.add(AntDesign.createStatisticCard("Duplicate Requests Blocked", lblStatDuplicates, AntDesign.WARNING_TEXT));
-        panel.add(AntDesign.createStatisticCard("Errors / Rejected", lblStatErrors, AntDesign.DANGER));
+        panel.add(AntDesign.createStatisticCard("Thư đã gửi", lblStatSent, AntDesign.SUCCESS));
+        panel.add(AntDesign.createStatisticCard("Thư đã nhận", lblStatReceived, AntDesign.PRIMARY));
+
+        panel.add(AntDesign.createStatisticCard("Phiên online", lblStatSessions, new Color(19, 194, 194)));
+        panel.add(AntDesign.createStatisticCard("Chặn trùng", lblStatDuplicates, AntDesign.WARNING_TEXT));
+        panel.add(AntDesign.createStatisticCard("Lỗi / Từ chối", lblStatErrors, AntDesign.DANGER));
 
         return panel;
     }
@@ -354,7 +345,7 @@ public class ServerManagerUI extends JFrame {
 
         JPanel leftInfo = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         leftInfo.setOpaque(false);
-        JLabel lblTitle = new JLabel("👥 Trạng Thái Hoạt Động Của Người Dùng & Phiên Kết Nối");
+        JLabel lblTitle = new JLabel("Trạng thái người dùng");
         lblTitle.setFont(AntDesign.FONT_SUBTITLE);
         lblTitle.setForeground(AntDesign.TEXT_PRIMARY);
         leftInfo.add(lblTitle);
@@ -366,7 +357,7 @@ public class ServerManagerUI extends JFrame {
 
         JPanel rightControls = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         rightControls.setOpaque(false);
-        AntButton btnRefreshStatus = AntDesign.createPrimaryButton("🔄 Làm mới dữ liệu");
+        AntButton btnRefreshStatus = AntDesign.createPrimaryButton("Làm mới");
         btnRefreshStatus.addActionListener(e -> refreshUserStatusTable());
         rightControls.add(btnRefreshStatus);
         topBar.add(rightControls, BorderLayout.EAST);
@@ -376,16 +367,46 @@ public class ServerManagerUI extends JFrame {
         // Configure userStatusTable with Ant Design Table style
         AntDesign.styleTable(userStatusTable);
 
-        // Column widths
+        // Column widths - make "Đang làm gì (Kèm IP & Port)" significantly wider and auto-expand
         if (userStatusTable.getColumnModel().getColumnCount() >= 8) {
-            userStatusTable.getColumnModel().getColumn(0).setPreferredWidth(100); // Username
-            userStatusTable.getColumnModel().getColumn(1).setPreferredWidth(110); // Connected
-            userStatusTable.getColumnModel().getColumn(2).setPreferredWidth(110); // Registered
-            userStatusTable.getColumnModel().getColumn(3).setPreferredWidth(120); // Logged in
-            userStatusTable.getColumnModel().getColumn(4).setPreferredWidth(135); // Giờ vào
-            userStatusTable.getColumnModel().getColumn(5).setPreferredWidth(140); // Giờ ra
-            userStatusTable.getColumnModel().getColumn(6).setPreferredWidth(330); // Đang làm gì (Kèm IP & Port)
-            userStatusTable.getColumnModel().getColumn(7).setPreferredWidth(100); // Cập nhật cuối
+            // Col 0: Username
+            userStatusTable.getColumnModel().getColumn(0).setPreferredWidth(95);
+            userStatusTable.getColumnModel().getColumn(0).setMinWidth(80);
+            userStatusTable.getColumnModel().getColumn(0).setMaxWidth(130);
+
+            // Col 1: Connected
+            userStatusTable.getColumnModel().getColumn(1).setPreferredWidth(105);
+            userStatusTable.getColumnModel().getColumn(1).setMinWidth(90);
+            userStatusTable.getColumnModel().getColumn(1).setMaxWidth(125);
+
+            // Col 2: Registered
+            userStatusTable.getColumnModel().getColumn(2).setPreferredWidth(105);
+            userStatusTable.getColumnModel().getColumn(2).setMinWidth(90);
+            userStatusTable.getColumnModel().getColumn(2).setMaxWidth(125);
+
+            // Col 3: Logged in
+            userStatusTable.getColumnModel().getColumn(3).setPreferredWidth(115);
+            userStatusTable.getColumnModel().getColumn(3).setMinWidth(100);
+            userStatusTable.getColumnModel().getColumn(3).setMaxWidth(135);
+
+            // Col 4: Giờ vào (Login)
+            userStatusTable.getColumnModel().getColumn(4).setPreferredWidth(140);
+            userStatusTable.getColumnModel().getColumn(4).setMinWidth(120);
+            userStatusTable.getColumnModel().getColumn(4).setMaxWidth(165);
+
+            // Col 5: Giờ ra (Logout)
+            userStatusTable.getColumnModel().getColumn(5).setPreferredWidth(140);
+            userStatusTable.getColumnModel().getColumn(5).setMinWidth(120);
+            userStatusTable.getColumnModel().getColumn(5).setMaxWidth(165);
+
+            // Col 6: Đang làm gì (Kèm IP & Port) -> Expanded to 550px+ with no max-width to absorb all free table width
+            userStatusTable.getColumnModel().getColumn(6).setPreferredWidth(550);
+            userStatusTable.getColumnModel().getColumn(6).setMinWidth(380);
+
+            // Col 7: Cập nhật cuối
+            userStatusTable.getColumnModel().getColumn(7).setPreferredWidth(95);
+            userStatusTable.getColumnModel().getColumn(7).setMinWidth(80);
+            userStatusTable.getColumnModel().getColumn(7).setMaxWidth(120);
         }
 
         // Custom Cell Renderers for Ant Design Tag badges
@@ -407,14 +428,12 @@ public class ServerManagerUI extends JFrame {
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                 String text = value != null ? value.toString() : "";
                 TagColor color = TagColor.DEFAULT;
-                if (text.contains("Đã kết nối") || text.contains("Đang hoạt động")) {
+                if (text.contains("Đã kết nối") || text.contains("Đã đăng nhập") || text.contains("Online")) {
                     color = TagColor.SUCCESS;
-                } else if (text.contains("Đã ngắt") || text.contains("Chưa")) {
-                    color = TagColor.DEFAULT;
-                } else if (text.contains("Đã đăng ký")) {
-                    color = TagColor.PURPLE;
-                } else if (text.contains("Đã đăng nhập")) {
+                } else if (text.contains("Đã đăng ký") || text.contains("Đang hoạt động")) {
                     color = TagColor.PROCESSING;
+                } else if (text.contains("Chưa") || text.contains("Offline") || text.contains("Đã ngắt")) {
+                    color = TagColor.DEFAULT;
                 }
                 return AntDesign.createTag(text, color);
             }
@@ -424,8 +443,14 @@ public class ServerManagerUI extends JFrame {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                 Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-                c.setFont(AntDesign.FONT_CODE);
+                c.setFont(AntDesign.FONT_BODY);
                 c.setForeground(AntDesign.TEXT_PRIMARY);
+                if (c instanceof JComponent) {
+                    ((JComponent) c).setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
+                    if (value != null) {
+                        ((JComponent) c).setToolTipText(value.toString());
+                    }
+                }
                 return c;
             }
         };
@@ -456,12 +481,12 @@ public class ServerManagerUI extends JFrame {
         headerBar.setBackground(AntDesign.BG_DARK_HEADER); // #001529 Ant Design Dark Sider color
         headerBar.setBorder(new EmptyBorder(6, 12, 6, 12));
 
-        JLabel lblTitle = new JLabel("💻 TERMINAL & NHẬT KÝ MÁY CHỦ (CONSOLE THU NHỎ)");
+        JLabel lblTitle = new JLabel("Nhật ký máy chủ (Console)");
         lblTitle.setFont(AntDesign.FONT_SMALL_BOLD);
         lblTitle.setForeground(Color.WHITE);
         headerBar.add(lblTitle, BorderLayout.WEST);
 
-        JLabel lblDesc = new JLabel("Nhật ký gói tin UDP, trạng thái kết nối & giao dịch thời gian thực");
+        JLabel lblDesc = new JLabel("UDP Realtime");
         lblDesc.setFont(AntDesign.FONT_SMALL);
         lblDesc.setForeground(new Color(148, 163, 184));
         headerBar.add(lblDesc, BorderLayout.EAST);
@@ -611,14 +636,14 @@ public class ServerManagerUI extends JFrame {
         long connectedCount = records.stream().filter(UserActivityRecord::isConnected).count();
         long loggedInCount = records.stream().filter(UserActivityRecord::isLoggedIn).count();
 
-        lblOverallSummary.setText(String.format(" (Tổng: %d tài khoản | Đang kết nối: %d | Đang đăng nhập: %d)",
+        lblOverallSummary.setText(String.format(" (%d tài khoản | %d kết nối | %d online)",
                 totalAccounts, connectedCount, loggedInCount));
 
         userStatusTableModel.setRowCount(0);
         for (UserActivityRecord rec : records) {
             String connStr = rec.isConnected() ? "● Đã kết nối" : "○ Chưa kết nối";
-            String regStr = rec.isRegistered() ? "✓ Đã đăng ký" : "— Chưa";
-            String loginStr = rec.isLoggedIn() ? "● Đã đăng nhập" : "○ Chưa đăng nhập";
+            String regStr = rec.isRegistered() ? "● Đã đăng ký" : "○ Chưa";
+            String loginStr = rec.isLoggedIn() ? "● Online" : "○ Offline";
             String inTime = (rec.getLoginTime() != null && !rec.getLoginTime().isEmpty()) ? rec.getLoginTime() : "-";
             String outTime;
             if (rec.isLoggedIn()) {

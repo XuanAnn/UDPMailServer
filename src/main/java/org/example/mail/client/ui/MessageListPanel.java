@@ -16,8 +16,8 @@ public class MessageListPanel extends JPanel {
 
     private final DefaultListModel<MailItem> listModel = new DefaultListModel<>();
     private final JList<MailItem> mailJList = new JList<>(listModel);
-    private final JLabel lblFolderTitle = new JLabel("Hộp thư đến (Inbox)");
-    private final JLabel lblCount = new JLabel("0 emails");
+    private final JLabel lblFolderTitle = new JLabel("Hộp thư đến");
+    private final JLabel lblCount = new JLabel("0 thư");
     private final JTextField searchField = new JTextField() {
         @Override
         protected void paintComponent(Graphics g) {
@@ -29,7 +29,7 @@ public class MessageListPanel extends JPanel {
                 g2.setFont(AntDesign.FONT_SMALL);
                 FontMetrics fm = g2.getFontMetrics();
                 int y = (getHeight() - fm.getHeight()) / 2 + fm.getAscent();
-                g2.drawString("Tìm kiếm người gửi, tiêu đề, tên file...", 8, y);
+                g2.drawString("Tìm kiếm...", 8, y);
                 g2.dispose();
             }
         }
@@ -132,7 +132,7 @@ public class MessageListPanel extends JPanel {
             }
         }
 
-        lblCount.setText(listModel.getSize() + " emails");
+        lblCount.setText(listModel.getSize() + " thư");
     }
 
     private boolean matches(MailItem m, String query) {
@@ -217,7 +217,7 @@ public class MessageListPanel extends JPanel {
                         ? (value.getMailId().endsWith(".txt") ? value.getMailId() : value.getMailId() + ".txt")
                         : "mail.txt";
                 String baseSubject = (value.getSubject() != null && !value.getSubject().isEmpty())
-                        ? value.getSubject() : "(No subject)";
+                        ? value.getSubject() : "(Không tiêu đề)";
                 lblSubject.setText("📄 [" + fileName + "] " + baseSubject);
                 lblPreview.setText(value.getPreview(65));
 

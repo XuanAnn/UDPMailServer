@@ -126,7 +126,7 @@ public class RequestDispatcher {
             case Protocol.CMD_PING -> {
                 String token = request.getToken();
                 String username = (token != null && !token.isEmpty()) ? authService.authenticate(token) : null;
-                activityTracker.recordActivity(username, ip, clientPort, "Đang kết nối (Ping máy chủ UDP)");
+                activityTracker.recordActivity(username, ip, clientPort, "Ping UDP");
                 log("INFO", String.format("[PING] From %s:%d -> PONG", ip, clientPort));
                 return Response.status(reqId, Protocol.STATUS_PONG, "Server is alive")
                         .put("serverTime", String.valueOf(System.currentTimeMillis()));
@@ -140,11 +140,11 @@ public class RequestDispatcher {
                         ip, clientPort, username, password));
 
                 if (!Validator.isValidUsername(username)) {
-                    activityTracker.recordActivity(username, ip, clientPort, "Đăng ký thất bại (Username không hợp lệ)");
+                    activityTracker.recordActivity(username, ip, clientPort, "Lỗi ĐK: Tên không hợp lệ");
                     return Response.status(reqId, Protocol.STATUS_INVALID, "Invalid username format (3-30 alphanumeric or _)");
                 }
                 if (!Validator.isValidPassword(password)) {
-                    activityTracker.recordActivity(username, ip, clientPort, "Đăng ký thất bại (Password không hợp lệ)");
+                    activityTracker.recordActivity(username, ip, clientPort, "Lỗi ĐK: Mật khẩu không hợp lệ");
                     return Response.status(reqId, Protocol.STATUS_INVALID, "Invalid password format");
                 }
 
@@ -155,7 +155,7 @@ public class RequestDispatcher {
                     return Response.ok(reqId, "Account registered successfully")
                             .put("username", username);
                 } else {
-                    activityTracker.recordActivity(username, ip, clientPort, "Đăng ký thất bại (Tên người dùng đã tồn tại)");
+                    activityTracker.recordActivity(username, ip, clientPort, "Lỗi ĐK: Trùng tên");
                     log("WARN", String.format("[REGISTER_FAILED] Username '%s' already exists", username));
                     return Response.status(reqId, Protocol.STATUS_USER_EXISTS, "Username already exists");
                 }
@@ -185,7 +185,7 @@ public class RequestDispatcher {
                             username, token, files));
                     return loginResp;
                 } else {
-                    activityTracker.recordActivity(username, ip, clientPort, "Đăng nhập thất bại (Sai tên đăng nhập hoặc mật khẩu)");
+                    activityTracker.recordActivity(username, ip, clientPort, "Lỗi ĐN: Sai tài khoản/mật khẩu");
                     log("WARN", String.format("[LOGIN_FAILED] Invalid credentials for user '%s'", username));
                     return Response.status(reqId, Protocol.STATUS_AUTH_FAILED, "Invalid username or password");
                 }
@@ -209,7 +209,7 @@ public class RequestDispatcher {
                 List<MailItem> items = mailService.listEmails(username, folder);
                 int unreadCount = mailService.countUnreadMails(username, folder);
 
-                activityTracker.recordActivity(username, ip, clientPort, "Đang xem hộp thư " + folder + " (" + items.size() + " thư, " + unreadCount + " chưa đọc)");
+                activityTracker.recordActivity(username, ip, clientPort, "Xem " + folder + " (" + items.size() + " thư)");
 
                 Response res = Response.ok(reqId, "Loaded " + items.size() + " emails")
                         .put("folder", folder)
@@ -241,11 +241,11 @@ public class RequestDispatcher {
 
                 MailItem mail = mailService.readEmail(username, folder, mailId);
                 if (mail == null) {
-                    activityTracker.recordActivity(username, ip, clientPort, "Đọc thư #" + mailId + " thất bại (Không tìm thấy)");
+                    activityTracker.recordActivity(username, ip, clientPort, "Lỗi đọc: Thư #" + mailId);
                     return Response.status(reqId, Protocol.STATUS_NOT_FOUND, "Email not found");
                 }
 
-                activityTracker.recordActivity(username, ip, clientPort, "Đang đọc thư '" + mail.getSubject() + "' (Từ: " + mail.getSender() + ")");
+                activityTracker.recordActivity(username, ip, clientPort, "Đọc: " + (mail.getSubject() != null ? mail.getSubject() : ""));
                 log("INFO", String.format("[READ] User '%s' opened mail '%s' ('%s') from %s [%s:%d]",
                         username, mailId, mail.getSubject(), mail.getSender(), mail.getSenderIp(), mail.getSenderPort()));
                 return Response.ok(reqId, "Email retrieved")
@@ -269,7 +269,7 @@ public class RequestDispatcher {
                 String senderIp = ip;
                 int senderPort = clientPort;
 
-                activityTracker.recordActivity(sender, senderIp, senderPort, "Đang gửi thư tới '" + recipient + "' (Tiêu đề: '" + subject + "')");
+                activityTracker.recordActivity(sender, senderIp, senderPort, "Gửi: " + recipient + " - " + subject);
                 log("INFO", String.format("[SEND] From: '%s' (%s:%d) -> To: '%s' | Subject: '%s'",
                         sender, senderIp, senderPort, recipient, subject));
 
@@ -298,7 +298,7 @@ public class RequestDispatcher {
                 String body = request.get("body");
                 String existingMailId = request.get("mailId");
 
-                activityTracker.recordActivity(username, ip, clientPort, "Đang lưu bản nháp thư (Tiêu đề: '" + (subject != null ? subject : "") + "')");
+                activityTracker.recordActivity(username, ip, clientPort, "Lưu nháp: " + (subject != null ? subject : ""));
                 String mailId = mailService.saveDraft(username, recipient, subject, body, existingMailId);
                 log("INFO", String.format("[SAVE_DRAFT] User '%s' saved draft '%s'", username, mailId));
                 return Response.ok(reqId, "Draft saved")
@@ -311,7 +311,7 @@ public class RequestDispatcher {
                 String mailId = request.get("mailId");
                 boolean read = Boolean.parseBoolean(request.getOrDefault("read", "true"));
 
-                activityTracker.recordActivity(username, ip, clientPort, "Đánh dấu thư #" + mailId + (read ? " là ĐÃ ĐỌC" : " là CHƯA ĐỌC"));
+                activityTracker.recordActivity(username, ip, clientPort, "Đánh dấu: " + (read ? "Đã đọc" : "Chưa đọc"));
                 boolean ok = mailService.markRead(username, folder, mailId, read);
                 log("INFO", String.format("[MARK_READ] User '%s' marked mail '%s' as read=%s", username, mailId, read));
                 return ok ? Response.ok(reqId, "Marked successfully") : Response.error(reqId, "Mail not found");
@@ -323,7 +323,7 @@ public class RequestDispatcher {
                 String dstFolder = request.get("dstFolder");
                 String mailId = request.get("mailId");
 
-                activityTracker.recordActivity(username, ip, clientPort, "Di chuyển thư #" + mailId + " từ " + srcFolder + " sang " + dstFolder);
+                activityTracker.recordActivity(username, ip, clientPort, "Chuyển: " + srcFolder + " -> " + dstFolder);
                 boolean ok = mailService.moveMail(username, srcFolder, dstFolder, mailId);
                 log("INFO", String.format("[MOVE] User '%s' moved mail '%s' from %s to %s", username, mailId, srcFolder, dstFolder));
                 return ok ? Response.ok(reqId, "Moved successfully") : Response.error(reqId, "Failed to move mail");
@@ -334,7 +334,7 @@ public class RequestDispatcher {
                 String folder = request.getOrDefault("folder", Protocol.FOLDER_INBOX).toUpperCase();
                 String mailId = request.get("mailId");
 
-                activityTracker.recordActivity(username, ip, clientPort, "Xóa thư #" + mailId + " khỏi hộp " + folder);
+                activityTracker.recordActivity(username, ip, clientPort, "Xóa khỏi " + folder);
                 boolean ok = mailService.deleteMail(username, folder, mailId);
                 log("INFO", String.format("[DELETE] User '%s' deleted mail '%s' from %s", username, mailId, folder));
                 return ok ? Response.ok(reqId, "Mail deleted") : Response.error(reqId, "Failed to delete mail");

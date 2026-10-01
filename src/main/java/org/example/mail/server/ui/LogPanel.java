@@ -21,9 +21,9 @@ public class LogPanel extends JPanel {
 
     private final JTextPane textPane = new JTextPane();
     private final StyledDocument doc = textPane.getStyledDocument();
-    private final JComboBox<String> levelFilter = new JComboBox<>(new String[]{"ALL", "INFO", "WARN", "ERROR"});
+    private final JComboBox<String> levelFilter = new JComboBox<>(new String[]{"Tất cả", "INFO", "WARN", "ERROR"});
     private final JTextField searchField = new JTextField(15);
-    private final JCheckBox autoScrollCheck = new JCheckBox("Auto Scroll", true);
+    private final JCheckBox autoScrollCheck = new JCheckBox("Tự cuộn", true);
 
     private static class LogEntry {
         final String timestamp;
@@ -75,7 +75,7 @@ public class LogPanel extends JPanel {
                 new EmptyBorder(4, 8, 4, 8)
         ));
 
-        JLabel lblLvl = new JLabel("Level:");
+        JLabel lblLvl = new JLabel("Mức:");
         lblLvl.setFont(AntDesign.FONT_BODY_BOLD);
         lblLvl.setForeground(AntDesign.TEXT_SECONDARY);
         toolbar.add(lblLvl);
@@ -84,7 +84,7 @@ public class LogPanel extends JPanel {
         levelFilter.setBackground(Color.WHITE);
         toolbar.add(levelFilter);
 
-        JLabel lblSearch = new JLabel("🔍 Search:");
+        JLabel lblSearch = new JLabel("🔍 Tìm:");
         lblSearch.setFont(AntDesign.FONT_BODY_BOLD);
         lblSearch.setForeground(AntDesign.TEXT_SECONDARY);
         toolbar.add(lblSearch);
@@ -97,8 +97,8 @@ public class LogPanel extends JPanel {
         autoScrollCheck.setOpaque(false);
         toolbar.add(autoScrollCheck);
 
-        AntButton clearBtn = AntDesign.createDefaultButton("Clear Log");
-        AntButton exportBtn = AntDesign.createDefaultButton("Export Log");
+        AntButton clearBtn = AntDesign.createDefaultButton("Xóa");
+        AntButton exportBtn = AntDesign.createDefaultButton("Xuất file");
 
         toolbar.add(clearBtn);
         toolbar.add(exportBtn);
@@ -149,7 +149,7 @@ public class LogPanel extends JPanel {
 
     private boolean matchesFilter(LogEntry entry) {
         String selectedLevel = (String) levelFilter.getSelectedItem();
-        if (selectedLevel != null && !selectedLevel.equals("ALL")) {
+        if (selectedLevel != null && !selectedLevel.equals("ALL") && !selectedLevel.equals("Tất cả")) {
             if (!entry.level.equalsIgnoreCase(selectedLevel)) {
                 return false;
             }

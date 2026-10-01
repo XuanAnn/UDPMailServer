@@ -67,7 +67,7 @@ public class UserActivityTracker {
         r.setConnected(true);
         r.setClientIp(ip);
         r.setClientPort(port);
-        r.setCurrentActivity("[" + ip + ":" + port + "] Vừa đăng ký tài khoản mới");
+        r.setCurrentActivity("[" + ip + ":" + port + "] Đăng ký");
         r.setLastActiveTime(LocalDateTime.now().format(SHORT_TIME_FMT));
         notifyListeners();
     }
@@ -85,7 +85,7 @@ public class UserActivityTracker {
         r.setLogoutTime("Đang hoạt động (Online)");
         r.setClientIp(ip);
         r.setClientPort(port);
-        r.setCurrentActivity("[" + ip + ":" + port + "] Đã đăng nhập vào hệ thống");
+        r.setCurrentActivity("[" + ip + ":" + port + "] Đăng nhập");
         r.setLastActiveTime(LocalDateTime.now().format(SHORT_TIME_FMT));
         notifyListeners();
     }
@@ -100,7 +100,7 @@ public class UserActivityTracker {
         r.setLogoutTime(nowStr);
         r.setClientIp(ip);
         r.setClientPort(port);
-        r.setCurrentActivity("[" + ip + ":" + port + "] Đã đăng xuất khỏi hệ thống");
+        r.setCurrentActivity("[" + ip + ":" + port + "] Đăng xuất");
         r.setLastActiveTime(LocalDateTime.now().format(SHORT_TIME_FMT));
         notifyListeners();
     }

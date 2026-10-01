@@ -17,9 +17,9 @@ public class ComposeDialog extends JDialog {
     private final JTextField txtTo = new JTextField();
     private final JTextField txtSubject = new JTextField();
     private final JTextArea txtBody = new JTextArea();
-    private final AntButton btnSend = AntDesign.createPrimaryButton("📤 Gửi thư (Send)");
-    private final AntButton btnSaveDraft = AntDesign.createDefaultButton("💾 Lưu nháp (Draft)");
-    private final AntButton btnDiscard = AntDesign.createDefaultButton("Hủy (Cancel)");
+    private final AntButton btnSend = AntDesign.createPrimaryButton("Gửi");
+    private final AntButton btnSaveDraft = AntDesign.createDefaultButton("Lưu nháp");
+    private final AntButton btnDiscard = AntDesign.createDefaultButton("Hủy");
     private final JLabel lblStatus = new JLabel(" ");
 
     private final MailClientService mailService;
@@ -28,7 +28,7 @@ public class ComposeDialog extends JDialog {
     private boolean sentOrSaved = false;
 
     public ComposeDialog(Frame owner, MailClientService mailService, Runnable onSuccessCallback) {
-        super(owner, "Soạn thư mới (Compose Email) - Ant Design", true);
+        super(owner, "Soạn thư", true);
         this.mailService = mailService;
         this.onSuccessCallback = onSuccessCallback;
 
@@ -36,7 +36,7 @@ public class ComposeDialog extends JDialog {
     }
 
     private void initUI() {
-        setSize(680, 540);
+        setSize(660, 520);
         setLocationRelativeTo(getOwner());
         setLayout(new BorderLayout());
         getContentPane().setBackground(AntDesign.BG_CONTAINER);
@@ -49,7 +49,7 @@ public class ComposeDialog extends JDialog {
                 BorderFactory.createMatteBorder(0, 0, 1, 0, AntDesign.BORDER_SPLIT),
                 new EmptyBorder(12, 18, 12, 18)
         ));
-        JLabel titleLbl = new JLabel("✉ Soạn thư mới (New Message)");
+        JLabel titleLbl = new JLabel("Soạn thư");
         titleLbl.setFont(AntDesign.FONT_TITLE);
         titleLbl.setForeground(AntDesign.TEXT_PRIMARY);
         headerBar.add(titleLbl, BorderLayout.WEST);
@@ -65,7 +65,7 @@ public class ComposeDialog extends JDialog {
 
         // To field
         gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0;
-        JLabel lblTo = new JLabel("Người nhận (To):");
+        JLabel lblTo = new JLabel("Người nhận:");
         lblTo.setFont(AntDesign.FONT_BODY_BOLD);
         lblTo.setForeground(AntDesign.TEXT_PRIMARY);
         formPanel.add(lblTo, gbc);
@@ -76,7 +76,7 @@ public class ComposeDialog extends JDialog {
 
         // Subject field
         gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0;
-        JLabel lblSub = new JLabel("Tiêu đề (Subject):");
+        JLabel lblSub = new JLabel("Tiêu đề:");
         lblSub.setFont(AntDesign.FONT_BODY_BOLD);
         lblSub.setForeground(AntDesign.TEXT_PRIMARY);
         formPanel.add(lblSub, gbc);

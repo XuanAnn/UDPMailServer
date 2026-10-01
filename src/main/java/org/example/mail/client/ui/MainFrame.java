@@ -32,12 +32,12 @@ public class MainFrame extends JFrame {
     private ReadingPanel readingPanel;
 
     // Header Components
-    private final AntTag tagConnStatus = AntDesign.createTag("🟢 Online", TagColor.SUCCESS);
-    private final AntTag tagRealtimeBadge = AntDesign.createTag("⚡ Realtime UDP: ON", TagColor.SUCCESS);
+    private final AntTag tagConnStatus = AntDesign.createTag("Online", TagColor.SUCCESS);
+    private final AntTag tagRealtimeBadge = AntDesign.createTag("Realtime", TagColor.SUCCESS);
     private final JLabel lblAlertBanner = new JLabel("");
-    private final AntButton btnRetryConn = AntDesign.createDefaultButton("Retry");
-    private final AntButton btnRefresh = AntDesign.createDefaultButton("🔄 Refresh");
-    private final AntButton btnLogout = AntDesign.createDangerButton("Sign Out");
+    private final AntButton btnRetryConn = AntDesign.createDefaultButton("Thử lại");
+    private final AntButton btnRefresh = AntDesign.createDefaultButton("Làm mới");
+    private final AntButton btnLogout = AntDesign.createDangerButton("Đăng xuất");
 
     private String activeFolder = Protocol.FOLDER_INBOX;
     private Timer heartbeatTimer;
@@ -53,7 +53,7 @@ public class MainFrame extends JFrame {
         this.mailService = mailService;
         this.onLogoutCallback = onLogoutCallback;
 
-        setTitle("Java Desktop Mail Client - " + authService.getCurrentSession().getUsername() + " [Ant Design]");
+        setTitle("Mail Client - " + authService.getCurrentSession().getUsername());
         setSize(1160, 760);
         setMinimumSize(new Dimension(900, 540));
         setLocationRelativeTo(null);
@@ -85,7 +85,7 @@ public class MainFrame extends JFrame {
         brandPanel.setOpaque(false);
         JLabel logo = new JLabel("📬");
         logo.setFont(AntDesign.font(20f, Font.BOLD));
-        JLabel title = new JLabel("UDP Mail Client");
+        JLabel title = new JLabel("Mail Client");
         title.setFont(AntDesign.FONT_SUBTITLE);
         title.setForeground(AntDesign.PRIMARY);
         brandPanel.add(logo);
@@ -94,14 +94,14 @@ public class MainFrame extends JFrame {
         brandPanel.add(btnRefresh);
 
         // LAN IPv4 Badge for Client
-        AntTag myIpTag = AntDesign.createTag("💻 My IP: " + localIPv4, TagColor.PROCESSING);
+        AntTag myIpTag = AntDesign.createTag("IP: " + localIPv4, TagColor.PROCESSING);
         brandPanel.add(myIpTag);
 
         // Server Host Indicator
-        AntTag serverTag = AntDesign.createTag("🌐 Server: " + client.getHost() + ":" + client.getPort(), TagColor.CYAN);
+        AntTag serverTag = AntDesign.createTag("Server: " + client.getHost() + ":" + client.getPort(), TagColor.CYAN);
         brandPanel.add(serverTag);
 
-        tagRealtimeBadge.setToolTipText("Emails are updated in real-time instantly via UDP push");
+        tagRealtimeBadge.setToolTipText("Thời gian thực (UDP)");
         brandPanel.add(tagRealtimeBadge);
 
         headerBar.add(brandPanel, BorderLayout.WEST);
@@ -115,7 +115,7 @@ public class MainFrame extends JFrame {
         btnRetryConn.setVisible(false);
         userPanel.add(btnRetryConn);
 
-        AntTag userTag = AntDesign.createTag("👤 " + authService.getCurrentSession().getUsername(), TagColor.PURPLE);
+        AntTag userTag = AntDesign.createTag(authService.getCurrentSession().getUsername(), TagColor.PURPLE);
         userPanel.add(userTag);
 
         userPanel.add(btnLogout);
@@ -285,7 +285,7 @@ public class MainFrame extends JFrame {
                 silentSyncFolder();
                 updateInboxBadge();
 
-                showAlertBanner("🔔 Tin nhắn mới từ " + from + ": " + sub);
+                showAlertBanner("Thư mới: " + from + " - " + sub);
             });
         });
 
@@ -326,10 +326,10 @@ public class MainFrame extends JFrame {
 
     private void setOnlineStatus(boolean online) {
         if (online) {
-            tagConnStatus.setText("🟢 Online");
+            tagConnStatus.setText("Online");
             btnRetryConn.setVisible(false);
         } else {
-            tagConnStatus.setText("🔴 Offline / Timeout");
+            tagConnStatus.setText("Offline");
             btnRetryConn.setVisible(true);
         }
     }

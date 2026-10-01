@@ -25,13 +25,13 @@ public class LoginFrame extends JFrame {
     // Login Form Fields
     private final JTextField txtLoginUser = new JTextField();
     private final JPasswordField txtLoginPass = new JPasswordField();
-    private final AntButton btnLogin = AntDesign.createPrimaryButton("Đăng nhập (Sign In)");
+    private final AntButton btnLogin = AntDesign.createPrimaryButton("Đăng nhập");
 
     // Register Form Fields
     private final JTextField txtRegUser = new JTextField();
     private final JPasswordField txtRegPass = new JPasswordField();
     private final JPasswordField txtRegPassConfirm = new JPasswordField();
-    private final AntButton btnRegister = AntDesign.createSuccessButton("Tạo tài khoản (Create Account)");
+    private final AntButton btnRegister = AntDesign.createSuccessButton("Đăng ký");
 
     private final JLabel lblStatus = new JLabel(" ", SwingConstants.CENTER);
 
@@ -40,8 +40,8 @@ public class LoginFrame extends JFrame {
     private MailClientService mailService;
 
     public LoginFrame() {
-        setTitle("Java Desktop Mail Client - Ant Design Edition");
-        setSize(480, 600);
+        setTitle("UDP Mail Client");
+        setSize(460, 580);
         setResizable(false);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -74,21 +74,21 @@ public class LoginFrame extends JFrame {
         brandRow.setOpaque(false);
         JLabel logo = new JLabel("📬");
         logo.setFont(AntDesign.font(24f, Font.BOLD));
-        JLabel title = new JLabel("Java Mail Client");
+        JLabel title = new JLabel("Mail Client");
         title.setFont(AntDesign.FONT_TITLE_LARGE);
         title.setForeground(AntDesign.PRIMARY);
         brandRow.add(logo);
         brandRow.add(title);
         header.add(brandRow, BorderLayout.NORTH);
 
-        JLabel subtitle = new JLabel("Ant Design Template • Reliable UDP Protocol", SwingConstants.CENTER);
+        JLabel subtitle = new JLabel("UDP Reliable Protocol", SwingConstants.CENTER);
         subtitle.setFont(AntDesign.FONT_BODY);
         subtitle.setForeground(AntDesign.TEXT_SECONDARY);
         header.add(subtitle, BorderLayout.CENTER);
 
         JPanel tagRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 4));
         tagRow.setOpaque(false);
-        AntTag myIpTag = AntDesign.createTag("💻 My LAN IPv4: " + localIPv4, TagColor.PROCESSING);
+        AntTag myIpTag = AntDesign.createTag("IP: " + localIPv4, TagColor.PROCESSING);
         tagRow.add(myIpTag);
         header.add(tagRow, BorderLayout.SOUTH);
 
@@ -105,8 +105,8 @@ public class LoginFrame extends JFrame {
         JTabbedPane tabs = new JTabbedPane();
         tabs.setFont(AntDesign.FONT_BODY_BOLD);
         tabs.setBackground(AntDesign.BG_CONTAINER);
-        tabs.addTab("Đăng nhập (Sign In)", createLoginPanel());
-        tabs.addTab("Đăng ký (Register)", createRegisterPanel());
+        tabs.addTab("Đăng nhập", createLoginPanel());
+        tabs.addTab("Đăng ký", createRegisterPanel());
         cardContainer.add(tabs, BorderLayout.CENTER);
 
         root.add(cardContainer, BorderLayout.CENTER);
@@ -137,11 +137,11 @@ public class LoginFrame extends JFrame {
         AntDesign.styleInput(txtPort);
         serverBar.add(txtPort);
 
-        AntButton btnTestPing = AntDesign.createDefaultButton("⚡ Ping");
+        AntButton btnTestPing = AntDesign.createDefaultButton("Ping");
         serverBar.add(btnTestPing);
 
-        AntButton btnUseLanIp = AntDesign.createDefaultButton("Use My IP");
-        btnUseLanIp.setToolTipText("Fill Server Host with this machine's LAN IPv4 (" + localIPv4 + ")");
+        AntButton btnUseLanIp = AntDesign.createDefaultButton("IP máy");
+        btnUseLanIp.setToolTipText("Điền IP máy hiện tại: " + localIPv4);
         btnUseLanIp.addActionListener(e -> txtHost.setText(localIPv4));
         serverBar.add(btnUseLanIp);
 
@@ -177,7 +177,7 @@ public class LoginFrame extends JFrame {
         gbc.insets = new Insets(5, 4, 5, 4);
 
         gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 1.0;
-        JLabel lblU = new JLabel("Tên tài khoản (Username):");
+        JLabel lblU = new JLabel("Tài khoản:");
         lblU.setFont(AntDesign.FONT_BODY_BOLD);
         lblU.setForeground(AntDesign.TEXT_PRIMARY);
         panel.add(lblU, gbc);
@@ -186,7 +186,7 @@ public class LoginFrame extends JFrame {
         panel.add(txtLoginUser, gbc);
 
         gbc.gridx = 0; gbc.gridy = 2;
-        JLabel lblP = new JLabel("Mật khẩu (Password):");
+        JLabel lblP = new JLabel("Mật khẩu:");
         lblP.setFont(AntDesign.FONT_BODY_BOLD);
         lblP.setForeground(AntDesign.TEXT_PRIMARY);
         panel.add(lblP, gbc);
@@ -214,7 +214,7 @@ public class LoginFrame extends JFrame {
         gbc.insets = new Insets(4, 4, 4, 4);
 
         gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 1.0;
-        JLabel lblU = new JLabel("Tên đăng ký (3-30 ký tự chữ/số):");
+        JLabel lblU = new JLabel("Tài khoản:");
         lblU.setFont(AntDesign.FONT_BODY_BOLD);
         lblU.setForeground(AntDesign.TEXT_PRIMARY);
         panel.add(lblU, gbc);

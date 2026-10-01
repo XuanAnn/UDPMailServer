@@ -18,7 +18,7 @@ import java.nio.file.Path;
 
 public class ReadingPanel extends JPanel {
 
-    private final JLabel lblSubject = new JLabel("No email selected");
+    private final JLabel lblSubject = new JLabel("Chưa chọn thư");
     private final JLabel lblFrom = new JLabel("-");
     private final JLabel lblTo = new JLabel("-");
     private final JLabel lblDate = new JLabel("-");
@@ -31,11 +31,11 @@ public class ReadingPanel extends JPanel {
     private final JTextArea txtRawView = new JTextArea();
     private final JTabbedPane viewModeTabs = new JTabbedPane();
 
-    private final AntButton btnReply = AntDesign.createDefaultButton("↩ Reply");
-    private final AntButton btnForward = AntDesign.createDefaultButton("↪ Forward");
-    private final AntButton btnDelete = AntDesign.createDangerButton("🗑 Delete");
-    private final AntButton btnToggleRead = AntDesign.createDefaultButton("✉ Mark Unread");
-    private final AntButton btnOpenTxtExternal = AntDesign.createDefaultButton("📄 Open in TXT (Notepad)");
+    private final AntButton btnReply = AntDesign.createDefaultButton("Trả lời");
+    private final AntButton btnForward = AntDesign.createDefaultButton("Chuyển tiếp");
+    private final AntButton btnDelete = AntDesign.createDangerButton("Xóa");
+    private final AntButton btnToggleRead = AntDesign.createDefaultButton("Chưa đọc");
+    private final AntButton btnOpenTxtExternal = AntDesign.createDefaultButton("Mở file TXT");
 
     private final MailClientService mailService;
     private final Runnable onMailChangedCallback;
@@ -87,7 +87,7 @@ public class ReadingPanel extends JPanel {
 
         JPanel fromRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
         fromRow.setOpaque(false);
-        JLabel fLbl = new JLabel("From:");
+        JLabel fLbl = new JLabel("Từ:");
         fLbl.setFont(AntDesign.FONT_BODY_BOLD);
         fLbl.setForeground(AntDesign.TEXT_SECONDARY);
         fromRow.add(fLbl);
@@ -101,7 +101,7 @@ public class ReadingPanel extends JPanel {
 
         JPanel toRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
         toRow.setOpaque(false);
-        JLabel tLbl = new JLabel("To:");
+        JLabel tLbl = new JLabel("Đến:");
         tLbl.setFont(AntDesign.FONT_BODY_BOLD);
         tLbl.setForeground(AntDesign.TEXT_SECONDARY);
         toRow.add(tLbl);
@@ -113,7 +113,7 @@ public class ReadingPanel extends JPanel {
 
         JPanel dateRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
         dateRow.setOpaque(false);
-        JLabel dLbl = new JLabel("Date:");
+        JLabel dLbl = new JLabel("Thời gian:");
         dLbl.setFont(AntDesign.FONT_BODY_BOLD);
         dLbl.setForeground(AntDesign.TEXT_SECONDARY);
         dateRow.add(dLbl);
@@ -153,8 +153,8 @@ public class ReadingPanel extends JPanel {
 
         viewModeTabs.setFont(AntDesign.FONT_BODY_BOLD);
         viewModeTabs.setBackground(AntDesign.BG_CONTAINER);
-        viewModeTabs.addTab("📱 Chế độ App (App View)", scrollAppMode);
-        viewModeTabs.addTab("📄 Chế độ Text (TXT File View)", scrollTxtMode);
+        viewModeTabs.addTab("Giao diện", scrollAppMode);
+        viewModeTabs.addTab("File TXT", scrollTxtMode);
 
         add(viewModeTabs, BorderLayout.CENTER);
 
@@ -304,7 +304,7 @@ public class ReadingPanel extends JPanel {
         mailService.markRead(currentMail.getMailId(), currentFolder, newRead, (ok, err) -> {
             if (Boolean.TRUE.equals(ok)) {
                 currentMail.setReadState(newRead);
-                btnToggleRead.setText(newRead ? "✉ Đánh dấu chưa đọc" : "✉ Đánh dấu đã đọc");
+                btnToggleRead.setText(newRead ? "Chưa đọc" : "Đã đọc");
                 if (onMailChangedCallback != null) onMailChangedCallback.run();
             } else {
                 JOptionPane.showMessageDialog(this, "Thao tác thất bại: " + (err != null ? err.getMessage() : "Timeout"));
