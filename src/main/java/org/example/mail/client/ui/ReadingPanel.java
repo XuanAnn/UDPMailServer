@@ -309,13 +309,13 @@ public class ReadingPanel extends JPanel {
     private void onToggleRead() {
         if (currentMail == null) return;
         boolean newRead = !currentMail.isReadState();
-        mailService.markRead(currentMail.getMailId(), currentFolder, newRead, (ok, err) -> {
+        mailService.markRead(currentFolder, currentMail.getMailId(), newRead, (ok, err) -> {
             if (Boolean.TRUE.equals(ok)) {
                 currentMail.setReadState(newRead);
                 btnToggleRead.setText(newRead ? "Chưa đọc" : "Đã đọc");
                 if (onMailChangedCallback != null) onMailChangedCallback.run();
             } else {
-                JOptionPane.showMessageDialog(this, "Thao tác thất bại: " + (err != null ? err.getMessage() : "Timeout"));
+                JOptionPane.showMessageDialog(this, "Thao tác thất bại: " + (err != null ? err.getMessage() : "Không thể cập nhật trạng thái"), "Thông báo", JOptionPane.WARNING_MESSAGE);
             }
         });
     }
@@ -332,21 +332,21 @@ public class ReadingPanel extends JPanel {
         if (opt != JOptionPane.YES_OPTION) return;
 
         if (isTrash) {
-            mailService.deleteMail(currentMail.getMailId(), currentFolder, (ok, err) -> {
+            mailService.deleteMail(currentFolder, currentMail.getMailId(), (ok, err) -> {
                 if (Boolean.TRUE.equals(ok)) {
                     clear();
                     if (onMailChangedCallback != null) onMailChangedCallback.run();
                 } else {
-                    JOptionPane.showMessageDialog(this, "Xóa thất bại: " + (err != null ? err.getMessage() : "Timeout"));
+                    JOptionPane.showMessageDialog(this, "Xóa thất bại: " + (err != null ? err.getMessage() : "Lỗi kết nối máy chủ"), "Lỗi", JOptionPane.ERROR_MESSAGE);
                 }
             });
         } else {
-            mailService.moveMail(currentMail.getMailId(), currentFolder, Protocol.FOLDER_TRASH, (ok, err) -> {
+            mailService.moveMail(currentFolder, Protocol.FOLDER_TRASH, currentMail.getMailId(), (ok, err) -> {
                 if (Boolean.TRUE.equals(ok)) {
                     clear();
                     if (onMailChangedCallback != null) onMailChangedCallback.run();
                 } else {
-                    JOptionPane.showMessageDialog(this, "Chuyển vào thùng rác thất bại: " + (err != null ? err.getMessage() : "Timeout"));
+                    JOptionPane.showMessageDialog(this, "Chuyển vào thùng rác thất bại: " + (err != null ? err.getMessage() : "Lỗi kết nối máy chủ"), "Lỗi", JOptionPane.ERROR_MESSAGE);
                 }
             });
         }

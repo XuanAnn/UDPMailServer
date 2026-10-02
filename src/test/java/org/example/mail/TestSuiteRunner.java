@@ -250,8 +250,10 @@ public class TestSuiteRunner {
             assertTrue(mail.getSenderPort() > 0, "Sender Port captured: " + mail.getSenderPort());
 
             // Storage check: Verify welcome email and sent mail files in accounts/bob/
-            Path expectedWelcome = testDir.resolve("accounts").resolve("bob").resolve("new_email.txt");
-            assertTrue(Files.exists(expectedWelcome), "Welcome file exists at accounts/bob/new_email.txt");
+            Path expectedWelcomeInbox = testDir.resolve("accounts").resolve("bob").resolve("inbox").resolve("new_email.txt");
+            assertTrue(Files.exists(expectedWelcomeInbox), "Welcome file exists in inbox at accounts/bob/inbox/new_email.txt");
+            Path rootNewEmail = testDir.resolve("accounts").resolve("bob").resolve("new_email.txt");
+            assertTrue(!Files.exists(rootNewEmail), "new_email.txt is not created directly in account root folder");
 
             Path expectedBobInboxFile = testDir.resolve("accounts").resolve("bob").resolve("inbox").resolve(mailId1 + ".txt");
             assertTrue(Files.exists(expectedBobInboxFile), "Mail saved on disk at accounts/bob/inbox/" + mailId1 + ".txt");

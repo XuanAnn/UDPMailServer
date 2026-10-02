@@ -114,7 +114,10 @@ public class MailClientService {
         runAsync(() -> {
             String token = authService.getCurrentSession().getToken();
             Response resp = client.markRead(token, folder, mailId, read);
-            return resp.isOk();
+            if (!resp.isOk()) {
+                throw new RuntimeException(resp.getMessage());
+            }
+            return true;
         }, callback);
     }
 
@@ -122,7 +125,10 @@ public class MailClientService {
         runAsync(() -> {
             String token = authService.getCurrentSession().getToken();
             Response resp = client.moveMail(token, srcFolder, dstFolder, mailId);
-            return resp.isOk();
+            if (!resp.isOk()) {
+                throw new RuntimeException(resp.getMessage());
+            }
+            return true;
         }, callback);
     }
 
@@ -130,7 +136,10 @@ public class MailClientService {
         runAsync(() -> {
             String token = authService.getCurrentSession().getToken();
             Response resp = client.deleteMail(token, folder, mailId);
-            return resp.isOk();
+            if (!resp.isOk()) {
+                throw new RuntimeException(resp.getMessage());
+            }
+            return true;
         }, callback);
     }
 

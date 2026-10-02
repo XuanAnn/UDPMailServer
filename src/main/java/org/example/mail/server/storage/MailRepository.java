@@ -93,13 +93,7 @@ public class MailRepository {
 
         String welcomeMsg = "Thank you for using this service. we hope that you will feel comfortabl........";
 
-        // Create new_email.txt directly in account folder
-        Path rootNewEmail = userDir.resolve("new_email.txt");
-        if (!Files.exists(rootNewEmail)) {
-            Files.writeString(rootNewEmail, welcomeMsg, StandardCharsets.UTF_8);
-        }
-
-        // Also put in inbox as welcome mail
+        // Put in inbox as welcome mail
         Path inboxNewEmail = inbox.resolve("new_email.txt");
         if (!Files.exists(inboxNewEmail)) {
             String welcomeSenderIp = org.example.mail.common.NetworkUtils.getLocalIPv4Address();

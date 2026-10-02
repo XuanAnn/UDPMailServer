@@ -64,11 +64,6 @@ public class AccountRepository {
         Files.writeString(tmpFile, content, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         Files.move(tmpFile, targetFile, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
 
-        // Create new_email.txt in the user's folder
-        Path welcomeFile = userDir.resolve("new_email.txt");
-        String welcomeMsg = "Thank you for using this service. we hope that you will feel comfortabl........";
-        Files.writeString(welcomeFile, welcomeMsg, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-
         return true;
     }
 

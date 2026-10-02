@@ -255,6 +255,10 @@ public class MailManagementPanel extends JPanel {
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
         actions.setOpaque(false);
 
+        AntButton btnOpenTxt = AntDesign.createDefaultButton("Mở file TXT");
+        btnOpenTxt.addActionListener(e -> openSelectedMailTxtExternal());
+        actions.add(btnOpenTxt);
+
         AntButton btnRefresh = AntDesign.createPrimaryButton("Làm mới");
         btnRefresh.addActionListener(e -> refreshCurrentMailView());
         actions.add(btnRefresh);
@@ -404,6 +408,16 @@ public class MailManagementPanel extends JPanel {
                     showMailPreview(currentMailItems.get(row));
                 } else {
                     clearPreview();
+                }
+            }
+        });
+
+        // Double click on mail row to open TXT file externally
+        mailTable.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    openSelectedMailTxtExternal();
                 }
             }
         });
@@ -628,6 +642,68 @@ public class MailManagementPanel extends JPanel {
                 server.getMailService().deleteMail(username, folder.code, item.getMailId());
             }
             refreshCurrentMailView();
+        }
+    }
+
+    private Path getSelectedMailFilePath() {
+        int row = mailTable.getSelectedRow();
+        String username = userList.getSelectedValue();
+        FolderEntry folder = folderList.getSelectedValue();
+        if (row < 0 || row >= currentMailItems.size() || username == null || folder == null) {
+            return null;
+        }
+
+        MailItem item = currentMailItems.get(row);
+        String baseId = item.getMailId().endsWith(".txt")
+                ? item.getMailId().substring(0, item.getMailId().length() - 4)
+                : item.getMailId();
+
+        Path filePath;
+        if ("ROOT".equalsIgnoreCase(folder.code)) {
+            filePath = server.getMailService().getMailRepository().getUserMailboxDir(username).resolve(baseId + ".txt");
+        } else {
+            filePath = server.getMailService().getMailRepository().getUserMailboxDir(username).resolve(folder.code.toLowerCase()).resolve(baseId + ".txt");
+            if (!Files.exists(filePath)) {
+                filePath = server.getMailService().getMailRepository().getUserMailboxDir(username).resolve(folder.code.toLowerCase()).resolve(baseId + ".mail");
+            }
+        }
+        return filePath;
+    }
+
+    private void openSelectedMailTxtExternal() {
+        Path filePath = getSelectedMailFilePath();
+        if (filePath == null) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn thư cần mở tệp .txt!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        if (!Files.exists(filePath)) {
+            JOptionPane.showMessageDialog(this, "Tệp không tồn tại trên đĩa: " + filePath, "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        try {
+            if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
+                Desktop.getDesktop().open(filePath.toFile());
+            } else {
+                openFileWithSystemProcess(filePath);
+            }
+        } catch (Exception ex) {
+            openFileWithSystemProcess(filePath);
+        }
+    }
+
+    private void openFileWithSystemProcess(Path filePath) {
+        try {
+            String os = System.getProperty("os.name", "").toLowerCase();
+            if (os.contains("win")) {
+                new ProcessBuilder("notepad.exe", filePath.toAbsolutePath().toString()).start();
+            } else if (os.contains("mac")) {
+                new ProcessBuilder("open", filePath.toAbsolutePath().toString()).start();
+            } else {
+                new ProcessBuilder("xdg-open", filePath.toAbsolutePath().toString()).start();
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Không thể mở tệp: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
     }
 }
