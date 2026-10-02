@@ -44,7 +44,7 @@ public class MailService {
 
         String mailId = mailRepository.getNextMailId();
 
-        // 1. Deliver to recipient INBOX
+        // 1. Deliver to recipient INBOX (saved directly to accounts/<recipient>/<mailId>.txt)
         MailItem inboxItem = new MailItem(mailId, sender, recipient, subject, body);
         inboxItem.setSenderIp(senderIp != null ? senderIp : "127.0.0.1");
         inboxItem.setSenderPort(senderPort);
@@ -52,10 +52,7 @@ public class MailService {
         inboxItem.setReadState(false);
         mailRepository.saveMail(recipient, Protocol.FOLDER_INBOX, inboxItem);
 
-        // Save email content directly in recipient account directory (accounts/<recipient>/email_xxx.txt)
-        mailRepository.saveMailToAccountRoot(recipient, mailId, body);
-
-        // 2. Save copy to sender SENT
+        // 2. Save copy to sender SENT (saved directly to accounts/<sender>/<mailId>.txt)
         MailItem sentItem = new MailItem(mailId, sender, recipient, subject, body);
         sentItem.setSenderIp(senderIp != null ? senderIp : "127.0.0.1");
         sentItem.setSenderPort(senderPort);
@@ -120,7 +117,7 @@ public class MailService {
             return false;
         }
 
-        if (Protocol.FOLDER_TRASH.equalsIgnoreCase(folder)) {
+        if (Protocol.FOLDER_TRASH.equalsIgnoreCase(folder) || "ALL".equalsIgnoreCase(folder) || "ROOT".equalsIgnoreCase(folder)) {
             return mailRepository.deletePermanently(username, folder, mailId);
         } else {
             return mailRepository.moveMail(username, folder, Protocol.FOLDER_TRASH, mailId);

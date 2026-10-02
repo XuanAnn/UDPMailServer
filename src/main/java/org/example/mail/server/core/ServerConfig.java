@@ -7,7 +7,7 @@ import java.util.Properties;
 public class ServerConfig {
     private String bindAddress = "0.0.0.0";
     private int port = 5000;
-    private String dataPath = "data";
+    private String dataPath = ".";
     private int timeoutMs = 5000;
     private boolean autoStart = false;
     private boolean emailReportEnabled = true;

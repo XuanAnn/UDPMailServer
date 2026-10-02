@@ -95,8 +95,7 @@ public class ReadingPanel extends JPanel {
         lblFrom.setFont(AntDesign.FONT_BODY_BOLD);
         lblFrom.setForeground(AntDesign.PRIMARY);
         fromRow.add(lblFrom);
-        fromRow.add(Box.createHorizontalStrut(12));
-        fromRow.add(lblFolder);
+        lblFolder.setVisible(false);
         metaPanel.add(fromRow);
 
         JPanel toRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
@@ -323,32 +322,16 @@ public class ReadingPanel extends JPanel {
     private void onDelete() {
         if (currentMail == null) return;
 
-        boolean isTrash = Protocol.FOLDER_TRASH.equalsIgnoreCase(currentFolder);
-        String prompt = isTrash
-                ? "Bạn có chắc chắn muốn xóa vĩnh viễn thư này?"
-                : "Bạn có muốn chuyển thư này vào Thùng rác (Trash)?";
-
-        int opt = JOptionPane.showConfirmDialog(this, prompt, "Xác nhận xóa", JOptionPane.YES_NO_OPTION);
+        int opt = JOptionPane.showConfirmDialog(this, "Bạn có chắc chắn muốn xóa thư này?", "Xác nhận xóa", JOptionPane.YES_NO_OPTION);
         if (opt != JOptionPane.YES_OPTION) return;
 
-        if (isTrash) {
-            mailService.deleteMail(currentFolder, currentMail.getMailId(), (ok, err) -> {
-                if (Boolean.TRUE.equals(ok)) {
-                    clear();
-                    if (onMailChangedCallback != null) onMailChangedCallback.run();
-                } else {
-                    JOptionPane.showMessageDialog(this, "Xóa thất bại: " + (err != null ? err.getMessage() : "Lỗi kết nối máy chủ"), "Lỗi", JOptionPane.ERROR_MESSAGE);
-                }
-            });
-        } else {
-            mailService.moveMail(currentFolder, Protocol.FOLDER_TRASH, currentMail.getMailId(), (ok, err) -> {
-                if (Boolean.TRUE.equals(ok)) {
-                    clear();
-                    if (onMailChangedCallback != null) onMailChangedCallback.run();
-                } else {
-                    JOptionPane.showMessageDialog(this, "Chuyển vào thùng rác thất bại: " + (err != null ? err.getMessage() : "Lỗi kết nối máy chủ"), "Lỗi", JOptionPane.ERROR_MESSAGE);
-                }
-            });
-        }
+        mailService.deleteMail(currentFolder, currentMail.getMailId(), (ok, err) -> {
+            if (Boolean.TRUE.equals(ok)) {
+                clear();
+                if (onMailChangedCallback != null) onMailChangedCallback.run();
+            } else {
+                JOptionPane.showMessageDialog(this, "Xóa thất bại: " + (err != null ? err.getMessage() : "Lỗi kết nối máy chủ"), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            }
+        });
     }
 }

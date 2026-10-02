@@ -23,8 +23,13 @@ public class MailRepository {
     private int lastAssignedMailNum = -1;
 
     public MailRepository(String dataPath) {
-        // Mailboxes are stored directly inside each user's account path: data/accounts/<username>/
-        this.rootPath = Paths.get(dataPath, "accounts");
+        // Mailboxes are stored directly inside each user's account path: accounts/<username>/
+        if (dataPath == null || dataPath.trim().isEmpty() || ".".equals(dataPath.trim()) || "data".equalsIgnoreCase(dataPath.trim())) {
+            this.rootPath = Paths.get("accounts");
+        } else {
+            Path p = Paths.get(dataPath);
+            this.rootPath = p.endsWith("accounts") ? p : p.resolve("accounts");
+        }
         try {
             Files.createDirectories(this.rootPath);
         } catch (IOException e) {
@@ -76,26 +81,18 @@ public class MailRepository {
     }
 
     private Path getFolderDir(String username, String folder) {
-        String cleanFolder = folder.toLowerCase().trim();
-        if (!Validator.isValidFolder(folder)) {
-            throw new IllegalArgumentException("Invalid mailbox folder: " + folder);
-        }
-        return getUserMailboxDir(username).resolve(cleanFolder);
+        return getUserMailboxDir(username);
     }
 
     public synchronized void initUserMailboxes(String username) throws IOException {
         Path userDir = getUserMailboxDir(username);
-        Path inbox = userDir.resolve("inbox");
-        Files.createDirectories(inbox);
-        Files.createDirectories(userDir.resolve("sent"));
-        Files.createDirectories(userDir.resolve("drafts"));
-        Files.createDirectories(userDir.resolve("trash"));
+        Files.createDirectories(userDir);
 
         String welcomeMsg = "Thank you for using this service. we hope that you will feel comfortabl........";
 
-        // Put in inbox as welcome mail
-        Path inboxNewEmail = inbox.resolve("new_email.txt");
-        if (!Files.exists(inboxNewEmail)) {
+        // Put welcome email directly into user's account directory
+        Path welcomeFile = userDir.resolve("new_email.txt");
+        if (!Files.exists(welcomeFile)) {
             String welcomeSenderIp = org.example.mail.common.NetworkUtils.getLocalIPv4Address();
             if (welcomeSenderIp == null || welcomeSenderIp.isEmpty()) {
                 welcomeSenderIp = "127.0.0.1";
@@ -111,13 +108,13 @@ public class MailRepository {
                                "Folder: INBOX\n" +
                                "\n---BODY---\n" +
                                welcomeMsg;
-            Files.writeString(inboxNewEmail, formatted, StandardCharsets.UTF_8);
+            Files.writeString(welcomeFile, formatted, StandardCharsets.UTF_8);
         }
     }
 
     public synchronized void saveMail(String username, String folder, MailItem mail) throws IOException {
         initUserMailboxes(username);
-        Path folderDir = getFolderDir(username, folder);
+        Path userDir = getUserMailboxDir(username);
 
         if (mail.getMailId() == null || mail.getMailId().trim().isEmpty()) {
             mail.setMailId(getNextMailId());
@@ -131,8 +128,8 @@ public class MailRepository {
             throw new IllegalArgumentException("Invalid mail ID format: " + mail.getMailId());
         }
 
-        Path targetFile = folderDir.resolve(baseId + ".txt");
-        Path tmpFile = folderDir.resolve(baseId + ".tmp");
+        Path targetFile = userDir.resolve(baseId + ".txt");
+        Path tmpFile = userDir.resolve(baseId + ".tmp");
 
         String sIp = mail.getSenderIp();
         if (sIp == null || sIp.isEmpty() || sIp.equals("127.0.0.1") || sIp.startsWith("127.")) {
@@ -141,6 +138,10 @@ public class MailRepository {
             else sIp = "127.0.0.1";
             mail.setSenderIp(sIp);
         }
+
+        String targetFolderStr = (folder != null && !folder.trim().isEmpty() && !"ALL".equalsIgnoreCase(folder) && !"ROOT".equalsIgnoreCase(folder))
+                ? folder.toUpperCase()
+                : (mail.getFolder() != null ? mail.getFolder().name() : "INBOX");
 
         StringBuilder sb = new StringBuilder();
         sb.append("Id: ").append(mail.getMailId()).append("\n");
@@ -151,7 +152,7 @@ public class MailRepository {
         sb.append("Subject: ").append(mail.getSubject() != null ? mail.getSubject() : "").append("\n");
         sb.append("Date: ").append(mail.getCreatedAt() != null ? mail.getCreatedAt() : "").append("\n");
         sb.append("Read: ").append(mail.isReadState()).append("\n");
-        sb.append("Folder: ").append(folder.toUpperCase()).append("\n");
+        sb.append("Folder: ").append(targetFolderStr).append("\n");
         sb.append("\n---BODY---\n");
         sb.append(mail.getBody() != null ? mail.getBody() : "");
 
@@ -163,14 +164,20 @@ public class MailRepository {
         List<MailItem> mails = new ArrayList<>();
         try {
             initUserMailboxes(username);
-            Path folderDir = getFolderDir(username, folder);
-            if (!Files.exists(folderDir)) return mails;
+            Path userDir = getUserMailboxDir(username);
+            if (!Files.exists(userDir)) return mails;
 
-            try (var stream = Files.list(folderDir)) {
+            boolean returnAll = (folder == null || folder.trim().isEmpty() || "ALL".equalsIgnoreCase(folder) || "ROOT".equalsIgnoreCase(folder));
+            MailFolder targetFolder = returnAll ? null : MailFolder.fromString(folder);
+
+            try (var stream = Files.list(userDir)) {
                 List<Path> files = stream
+                        .filter(Files::isRegularFile)
                         .filter(p -> {
                             String name = p.getFileName().toString();
-                            return (name.endsWith(".txt") || name.endsWith(".mail")) && !name.equals("account.txt");
+                            return (name.endsWith(".txt") || name.endsWith(".mail"))
+                                    && !name.equals("account.txt")
+                                    && !name.endsWith(".tmp");
                         })
                         .collect(Collectors.toList());
 
@@ -178,7 +185,9 @@ public class MailRepository {
                     try {
                         MailItem item = parseMailFile(p);
                         if (item != null) {
-                            mails.add(item);
+                            if (targetFolder == null || item.getFolder() == targetFolder) {
+                                mails.add(item);
+                            }
                         }
                     } catch (Exception ex) {
                         System.err.println("Failed to parse mail file " + p + ": " + ex.getMessage());
@@ -203,13 +212,17 @@ public class MailRepository {
         try {
             if (mailId == null) return null;
             String baseId = mailId.endsWith(".txt") ? mailId.substring(0, mailId.length() - 4) : mailId;
-            Path folderDir = getFolderDir(username, folder);
-            Path mailFile = folderDir.resolve(baseId + ".txt");
+            Path userDir = getUserMailboxDir(username);
+            Path mailFile = userDir.resolve(baseId + ".txt");
             if (!Files.exists(mailFile)) {
-                // Check fallback .mail
-                mailFile = folderDir.resolve(baseId + ".mail");
+                mailFile = userDir.resolve(baseId + ".mail");
                 if (!Files.exists(mailFile)) {
-                    return null;
+                    if (folder != null) {
+                        mailFile = userDir.resolve(folder.toLowerCase()).resolve(baseId + ".txt");
+                    }
+                    if (!Files.exists(mailFile)) {
+                        return null;
+                    }
                 }
             }
             return parseMailFile(mailFile);
@@ -224,7 +237,8 @@ public class MailRepository {
         if (mail == null) return false;
         mail.setReadState(read);
         try {
-            saveMail(username, folder, mail);
+            String f = mail.getFolder() != null ? mail.getFolder().name() : (folder != null ? folder : "INBOX");
+            saveMail(username, f, mail);
             return true;
         } catch (IOException e) {
             return false;
@@ -235,10 +249,16 @@ public class MailRepository {
         try {
             if (mailId == null) return false;
             String baseId = mailId.endsWith(".txt") ? mailId.substring(0, mailId.length() - 4) : mailId;
-            Path srcFile = getFolderDir(username, srcFolder).resolve(baseId + ".txt");
+            Path userDir = getUserMailboxDir(username);
+            Path srcFile = userDir.resolve(baseId + ".txt");
             if (!Files.exists(srcFile)) {
-                srcFile = getFolderDir(username, srcFolder).resolve(baseId + ".mail");
-                if (!Files.exists(srcFile)) return false;
+                srcFile = userDir.resolve(baseId + ".mail");
+                if (!Files.exists(srcFile)) {
+                    if (srcFolder != null) {
+                        srcFile = userDir.resolve(srcFolder.toLowerCase()).resolve(baseId + ".txt");
+                    }
+                    if (!Files.exists(srcFile)) return false;
+                }
             }
 
             MailItem mail = parseMailFile(srcFile);
@@ -246,7 +266,9 @@ public class MailRepository {
 
             mail.setFolder(MailFolder.fromString(dstFolder));
             saveMail(username, dstFolder, mail);
-            Files.deleteIfExists(srcFile);
+            if (!srcFile.equals(userDir.resolve(baseId + ".txt"))) {
+                Files.deleteIfExists(srcFile);
+            }
             return true;
         } catch (IOException e) {
             System.err.println("Error moving mail " + mailId + ": " + e.getMessage());
@@ -258,15 +280,17 @@ public class MailRepository {
         try {
             if (mailId == null) return false;
             String baseId = mailId.endsWith(".txt") ? mailId.substring(0, mailId.length() - 4) : mailId;
-            Path file = getFolderDir(username, folder).resolve(baseId + ".txt");
+            Path userDir = getUserMailboxDir(username);
+            Path file = userDir.resolve(baseId + ".txt");
             boolean deleted = Files.deleteIfExists(file);
             if (!deleted) {
-                Path alt = getFolderDir(username, folder).resolve(baseId + ".mail");
+                Path alt = userDir.resolve(baseId + ".mail");
                 deleted = Files.deleteIfExists(alt);
             }
-            // Also delete account root copy if present
-            Path rootFile = getUserMailboxDir(username).resolve(baseId + ".txt");
-            Files.deleteIfExists(rootFile);
+            if (!deleted && folder != null) {
+                Path sub = userDir.resolve(folder.toLowerCase()).resolve(baseId + ".txt");
+                deleted = Files.deleteIfExists(sub);
+            }
             return deleted;
         } catch (IOException e) {
             return false;
@@ -282,16 +306,14 @@ public class MailRepository {
         if (!Files.exists(rootPath)) return 0;
         try (var userStream = Files.list(rootPath)) {
             for (Path userDir : userStream.filter(Files::isDirectory).toList()) {
-                for (String folder : List.of("inbox", "sent", "drafts", "trash")) {
-                    Path f = userDir.resolve(folder);
-                    if (Files.exists(f)) {
-                        try (var mailStream = Files.list(f)) {
-                            total += mailStream.filter(p -> {
-                                String n = p.getFileName().toString();
-                                return (n.endsWith(".txt") || n.endsWith(".mail")) && !n.equals("account.txt");
-                            }).count();
-                        }
-                    }
+                try (var mailStream = Files.list(userDir)) {
+                    total += mailStream.filter(p -> {
+                        if (!Files.isRegularFile(p)) return false;
+                        String n = p.getFileName().toString();
+                        return (n.endsWith(".txt") || n.endsWith(".mail"))
+                                && !n.equals("account.txt")
+                                && !n.endsWith(".tmp");
+                    }).count();
                 }
             }
         } catch (IOException e) {
@@ -301,42 +323,11 @@ public class MailRepository {
     }
 
     public synchronized List<MailItem> listAccountRootMails(String username) {
-        List<MailItem> mails = new ArrayList<>();
-        try {
-            Path userDir = getUserMailboxDir(username);
-            if (!Files.exists(userDir)) return mails;
-            try (var stream = Files.list(userDir)) {
-                List<Path> files = stream
-                        .filter(Files::isRegularFile)
-                        .filter(p -> {
-                            String name = p.getFileName().toString();
-                            return name.endsWith(".txt") && !name.equals("account.txt") && !name.endsWith(".tmp");
-                        })
-                        .sorted()
-                        .toList();
-
-                for (Path p : files) {
-                    try {
-                        MailItem item = parseMailFile(p);
-                        if (item != null) {
-                            mails.add(item);
-                        }
-                    } catch (Exception ignored) {}
-                }
-            }
-        } catch (IOException ignored) {}
-        return mails;
+        return listMails(username, "ALL");
     }
 
     public synchronized boolean deleteAccountRootMail(String username, String mailId) {
-        try {
-            if (mailId == null) return false;
-            String baseId = mailId.endsWith(".txt") ? mailId.substring(0, mailId.length() - 4) : mailId;
-            Path file = getUserMailboxDir(username).resolve(baseId + ".txt");
-            return Files.deleteIfExists(file);
-        } catch (IOException e) {
-            return false;
-        }
+        return deletePermanently(username, null, mailId);
     }
 
     private MailItem parseMailFile(Path path) throws IOException {

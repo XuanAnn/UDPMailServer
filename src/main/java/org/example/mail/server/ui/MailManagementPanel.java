@@ -26,35 +26,12 @@ import java.util.Map;
  */
 public class MailManagementPanel extends JPanel {
 
-    public static class FolderEntry {
-        public final String code;
-        public final String displayName;
-        public final String icon;
-        public int count;
-
-        public FolderEntry(String code, String displayName, String icon) {
-            this.code = code;
-            this.displayName = displayName;
-            this.icon = icon;
-            this.count = 0;
-        }
-
-        @Override
-        public String toString() {
-            return icon + " " + displayName;
-        }
-    }
-
     private final MailServer server;
 
     // 1. User List
     private final DefaultListModel<String> userListModel = new DefaultListModel<>();
     private final JList<String> userList = new JList<>(userListModel);
     private final AntTag lblUserCountTag = AntDesign.createTag("0", TagColor.PROCESSING);
-
-    // 2. Folder List
-    private final DefaultListModel<FolderEntry> folderListModel = new DefaultListModel<>();
-    private final JList<FolderEntry> folderList = new JList<>(folderListModel);
 
     // 3. Email Table (includes Tệp, IP Gửi & Nội dung columns)
     private final DefaultTableModel mailTableModel = new DefaultTableModel(
@@ -83,39 +60,22 @@ public class MailManagementPanel extends JPanel {
         setBorder(new EmptyBorder(8, 8, 8, 8));
 
         initUI();
-        initDefaultFolders();
         setupListeners();
         refreshUsers();
     }
 
-    private void initDefaultFolders() {
-        folderListModel.clear();
-        folderListModel.addElement(new FolderEntry("INBOX", "Hộp thư đến", "📥"));
-        folderListModel.addElement(new FolderEntry("SENT", "Đã gửi", "📤"));
-        folderListModel.addElement(new FolderEntry("DRAFTS", "Bản nháp", "📝"));
-        folderListModel.addElement(new FolderEntry("TRASH", "Thùng rác", "🗑️"));
-        folderListModel.addElement(new FolderEntry("ROOT", "Tệp tài khoản", "📁"));
-    }
-
     private void initUI() {
-        // --- LEFT SPLIT: Users & Folders ---
+        // --- LEFT PANEL: Users List ---
         JPanel userPanel = createUserPanel();
-        JPanel folderPanel = createFolderPanel();
-
-        JSplitPane leftSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, userPanel, folderPanel);
-        leftSplit.setDividerLocation(180);
-        leftSplit.setResizeWeight(0.5);
-        leftSplit.setContinuousLayout(true);
-        leftSplit.setBorder(null);
-        leftSplit.setPreferredSize(new Dimension(380, 0));
+        userPanel.setPreferredSize(new Dimension(240, 0));
 
         // --- RIGHT PANEL: Email List & Preview ---
         JPanel rightPanel = createRightPanel();
 
-        // Main Horizontal Split: Left (Users + Folders) | Right (Emails + Preview)
-        JSplitPane mainSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftSplit, rightPanel);
-        mainSplit.setDividerLocation(380);
-        mainSplit.setResizeWeight(0.30);
+        // Main Horizontal Split: Left (Users) | Right (Emails + Preview)
+        JSplitPane mainSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, userPanel, rightPanel);
+        mainSplit.setDividerLocation(240);
+        mainSplit.setResizeWeight(0.22);
         mainSplit.setContinuousLayout(true);
         mainSplit.setBorder(null);
 
@@ -175,60 +135,6 @@ public class MailManagementPanel extends JPanel {
         });
 
         JScrollPane scroll = new JScrollPane(userList);
-        scroll.setBorder(BorderFactory.createLineBorder(AntDesign.BORDER_SPLIT, 1));
-        card.add(scroll, BorderLayout.CENTER);
-
-        return card;
-    }
-
-    private JPanel createFolderPanel() {
-        JPanel card = new JPanel(new BorderLayout(0, 6));
-        card.setBackground(AntDesign.BG_CONTAINER);
-        card.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(AntDesign.BORDER_SPLIT, 1),
-                new EmptyBorder(8, 8, 8, 8)
-        ));
-
-        // Header
-        JPanel header = new JPanel(new BorderLayout(4, 0));
-        header.setOpaque(false);
-        header.setBorder(new EmptyBorder(2, 4, 6, 4));
-
-        JLabel title = new JLabel("Thư mục");
-        title.setFont(AntDesign.FONT_SUBTITLE);
-        title.setForeground(AntDesign.TEXT_PRIMARY);
-        header.add(title, BorderLayout.WEST);
-        card.add(header, BorderLayout.NORTH);
-
-        // List
-        folderList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        folderList.setFont(AntDesign.FONT_BODY);
-        folderList.setBackground(AntDesign.BG_CONTAINER);
-        folderList.setCellRenderer((list, value, index, isSelected, cellHasFocus) -> {
-            JPanel item = new JPanel(new BorderLayout(4, 0));
-            item.setBorder(new EmptyBorder(7, 8, 7, 8));
-            if (isSelected) {
-                item.setBackground(AntDesign.PRIMARY_BG);
-            } else {
-                item.setBackground(index % 2 == 0 ? AntDesign.BG_CONTAINER : AntDesign.ROW_HOVER_BG);
-            }
-
-            JLabel lblName = new JLabel(value.icon + " " + value.displayName);
-            lblName.setFont(isSelected ? AntDesign.FONT_BODY_BOLD : AntDesign.FONT_BODY);
-            lblName.setForeground(isSelected ? AntDesign.PRIMARY : AntDesign.TEXT_PRIMARY);
-            item.add(lblName, BorderLayout.WEST);
-
-            TagColor tagColor = TagColor.DEFAULT;
-            if (value.count > 0) {
-                tagColor = value.code.equals("INBOX") ? TagColor.PROCESSING : TagColor.SUCCESS;
-            }
-            AntTag badge = AntDesign.createTag(String.valueOf(value.count), tagColor);
-            item.add(badge, BorderLayout.EAST);
-
-            return item;
-        });
-
-        JScrollPane scroll = new JScrollPane(folderList);
         scroll.setBorder(BorderFactory.createLineBorder(AntDesign.BORDER_SPLIT, 1));
         card.add(scroll, BorderLayout.CENTER);
 
@@ -376,27 +282,15 @@ public class MailManagementPanel extends JPanel {
     }
 
     private void setupListeners() {
-        // User selection change
+        // User selection change -> directly refresh mails for user
         userList.addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 String selectedUser = userList.getSelectedValue();
                 if (selectedUser != null) {
-                    updateFolderCounts(selectedUser);
-                    if (folderList.getSelectedIndex() < 0) {
-                        folderList.setSelectedIndex(0);
-                    } else {
-                        refreshCurrentMailView();
-                    }
+                    refreshCurrentMailView();
                 } else {
                     clearMailView();
                 }
-            }
-        });
-
-        // Folder selection change
-        folderList.addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {
-                refreshCurrentMailView();
             }
         });
 
@@ -448,46 +342,21 @@ public class MailManagementPanel extends JPanel {
         }
     }
 
-    private void updateFolderCounts(String username) {
-        for (int i = 0; i < folderListModel.size(); i++) {
-            FolderEntry entry = folderListModel.get(i);
-            int count = 0;
-            try {
-                if ("ROOT".equalsIgnoreCase(entry.code)) {
-                    count = server.getMailService().listAccountRootMails(username).size();
-                } else {
-                    count = server.getMailService().listEmails(username, entry.code).size();
-                }
-            } catch (Exception ignored) {}
-            entry.count = count;
-        }
-        folderList.repaint();
-    }
-
     public synchronized void refreshCurrentMailView() {
         String username = userList.getSelectedValue();
-        FolderEntry folder = folderList.getSelectedValue();
 
-        if (username == null || folder == null) {
+        if (username == null) {
             clearMailView();
             return;
         }
 
-        lblCurrentPath.setText("👤 " + username + "  /  " + folder.icon + " " + folder.displayName);
-
-        // Update counts
-        updateFolderCounts(username);
+        lblCurrentPath.setText("👤 " + username + "  (Thư mục tài khoản: accounts/" + username + ")");
 
         // Load emails
         mailTableModel.setRowCount(0);
         currentMailItems.clear();
 
-        List<MailItem> items;
-        if ("ROOT".equalsIgnoreCase(folder.code)) {
-            items = server.getMailService().listAccountRootMails(username);
-        } else {
-            items = server.getMailService().listEmails(username, folder.code);
-        }
+        List<MailItem> items = server.getMailService().listAccountRootMails(username);
 
         if (items != null) {
             currentMailItems.addAll(items);
@@ -548,20 +417,15 @@ public class MailManagementPanel extends JPanel {
 
         // Load raw file on disk
         String username = userList.getSelectedValue();
-        FolderEntry folder = folderList.getSelectedValue();
-        if (username != null && folder != null) {
+        if (username != null) {
             String baseId = item.getMailId().endsWith(".txt")
                     ? item.getMailId().substring(0, item.getMailId().length() - 4)
                     : item.getMailId();
 
-            Path filePath;
-            if ("ROOT".equalsIgnoreCase(folder.code)) {
-                filePath = server.getMailService().getMailRepository().getUserMailboxDir(username).resolve(baseId + ".txt");
-            } else {
-                filePath = server.getMailService().getMailRepository().getUserMailboxDir(username).resolve(folder.code.toLowerCase()).resolve(baseId + ".txt");
-                if (!Files.exists(filePath)) {
-                    filePath = server.getMailService().getMailRepository().getUserMailboxDir(username).resolve(folder.code.toLowerCase()).resolve(baseId + ".mail");
-                }
+            Path userDir = server.getMailService().getMailRepository().getUserMailboxDir(username);
+            Path filePath = userDir.resolve(baseId + ".txt");
+            if (!Files.exists(filePath)) {
+                filePath = userDir.resolve(baseId + ".mail");
             }
 
             if (Files.exists(filePath)) {
@@ -600,47 +464,36 @@ public class MailManagementPanel extends JPanel {
     private void toggleSelectedMailRead() {
         int row = mailTable.getSelectedRow();
         String username = userList.getSelectedValue();
-        FolderEntry folder = folderList.getSelectedValue();
 
-        if (row < 0 || row >= currentMailItems.size() || username == null || folder == null) {
-            return;
-        }
-
-        if ("ROOT".equalsIgnoreCase(folder.code)) {
-            JOptionPane.showMessageDialog(this, "Tệp gốc không hỗ trợ đổi trạng thái đọc", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+        if (row < 0 || row >= currentMailItems.size() || username == null) {
             return;
         }
 
         MailItem item = currentMailItems.get(row);
         boolean newRead = !item.isReadState();
-        server.getMailService().markRead(username, folder.code, item.getMailId(), newRead);
+        server.getMailService().markRead(username, "ALL", item.getMailId(), newRead);
         refreshCurrentMailView();
     }
 
     private void deleteSelectedMail() {
         int row = mailTable.getSelectedRow();
         String username = userList.getSelectedValue();
-        FolderEntry folder = folderList.getSelectedValue();
 
-        if (row < 0 || row >= currentMailItems.size() || username == null || folder == null) {
+        if (row < 0 || row >= currentMailItems.size() || username == null) {
             return;
         }
 
         MailItem item = currentMailItems.get(row);
         int opt = JOptionPane.showConfirmDialog(
                 this,
-                "Xác nhận xóa thư '" + item.getMailId() + "'?",
-                "Xác nhận",
+                "Xác nhận xóa tệp thư '" + item.getMailId() + ".txt' vĩnh viễn?",
+                "Xác nhận xóa",
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.WARNING_MESSAGE
         );
 
         if (opt == JOptionPane.YES_OPTION) {
-            if ("ROOT".equalsIgnoreCase(folder.code)) {
-                server.getMailService().deleteAccountRootMail(username, item.getMailId());
-            } else {
-                server.getMailService().deleteMail(username, folder.code, item.getMailId());
-            }
+            server.getMailService().deleteAccountRootMail(username, item.getMailId());
             refreshCurrentMailView();
         }
     }
@@ -648,8 +501,7 @@ public class MailManagementPanel extends JPanel {
     private Path getSelectedMailFilePath() {
         int row = mailTable.getSelectedRow();
         String username = userList.getSelectedValue();
-        FolderEntry folder = folderList.getSelectedValue();
-        if (row < 0 || row >= currentMailItems.size() || username == null || folder == null) {
+        if (row < 0 || row >= currentMailItems.size() || username == null) {
             return null;
         }
 
@@ -658,14 +510,10 @@ public class MailManagementPanel extends JPanel {
                 ? item.getMailId().substring(0, item.getMailId().length() - 4)
                 : item.getMailId();
 
-        Path filePath;
-        if ("ROOT".equalsIgnoreCase(folder.code)) {
-            filePath = server.getMailService().getMailRepository().getUserMailboxDir(username).resolve(baseId + ".txt");
-        } else {
-            filePath = server.getMailService().getMailRepository().getUserMailboxDir(username).resolve(folder.code.toLowerCase()).resolve(baseId + ".txt");
-            if (!Files.exists(filePath)) {
-                filePath = server.getMailService().getMailRepository().getUserMailboxDir(username).resolve(folder.code.toLowerCase()).resolve(baseId + ".mail");
-            }
+        Path userDir = server.getMailService().getMailRepository().getUserMailboxDir(username);
+        Path filePath = userDir.resolve(baseId + ".txt");
+        if (!Files.exists(filePath)) {
+            filePath = userDir.resolve(baseId + ".mail");
         }
         return filePath;
     }

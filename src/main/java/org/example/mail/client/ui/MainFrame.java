@@ -39,7 +39,7 @@ public class MainFrame extends JFrame {
     private final AntButton btnRefresh = AntDesign.createDefaultButton("Làm mới");
     private final AntButton btnLogout = AntDesign.createDangerButton("Đăng xuất");
 
-    private String activeFolder = Protocol.FOLDER_INBOX;
+    private String activeFolder = "ALL";
     private Timer heartbeatTimer;
     private Timer autoSyncTimer;
     private Timer alertDismissTimer;
@@ -270,10 +270,10 @@ public class MainFrame extends JFrame {
 
     private void updateInboxBadge() {
         if (!authService.isLoggedIn()) return;
-        mailService.fetchFolder(Protocol.FOLDER_INBOX, (items, err) -> {
+        mailService.fetchFolder(activeFolder, (items, err) -> {
             if (items != null) {
                 int unread = (int) items.stream().filter(m -> !m.isReadState()).count();
-                sidebarPanel.setUnreadCount(Protocol.FOLDER_INBOX, unread);
+                sidebarPanel.setUnreadCount("ALL", unread);
             }
         });
     }
@@ -361,9 +361,11 @@ public class MainFrame extends JFrame {
     }
 
     private String getFolderDisplayName(String folderCode) {
-        if (folderCode == null) return "Hộp thư đến";
+        if (folderCode == null || "ALL".equalsIgnoreCase(folderCode) || "ROOT".equalsIgnoreCase(folderCode)) {
+            return "Hộp thư";
+        }
         return switch (folderCode.toUpperCase()) {
-            case Protocol.FOLDER_INBOX -> "Hộp thư đến";
+            case Protocol.FOLDER_INBOX -> "Hộp thư";
             case Protocol.FOLDER_SENT -> "Đã gửi";
             case Protocol.FOLDER_DRAFTS -> "Thư nháp";
             case Protocol.FOLDER_TRASH -> "Thùng rác";

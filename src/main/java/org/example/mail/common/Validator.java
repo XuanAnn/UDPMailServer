@@ -47,6 +47,8 @@ public final class Validator {
         return Protocol.FOLDER_INBOX.equals(f)
                 || Protocol.FOLDER_SENT.equals(f)
                 || Protocol.FOLDER_DRAFTS.equals(f)
-                || Protocol.FOLDER_TRASH.equals(f);
+                || Protocol.FOLDER_TRASH.equals(f)
+                || "ALL".equals(f)
+                || "ROOT".equals(f);
     }
 }

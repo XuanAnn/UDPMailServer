@@ -15,7 +15,12 @@ public class AccountRepository {
     private final Path rootPath;
 
     public AccountRepository(String dataPath) {
-        this.rootPath = Paths.get(dataPath, "accounts");
+        if (dataPath == null || dataPath.trim().isEmpty() || ".".equals(dataPath.trim()) || "data".equalsIgnoreCase(dataPath.trim())) {
+            this.rootPath = Paths.get("accounts");
+        } else {
+            Path p = Paths.get(dataPath);
+            this.rootPath = p.endsWith("accounts") ? p : p.resolve("accounts");
+        }
         try {
             Files.createDirectories(this.rootPath);
         } catch (IOException e) {
@@ -77,15 +82,6 @@ public class AccountRepository {
                  .map(p -> p.getFileName().toString())
                  .filter(n -> !n.equals("account.txt") && !n.endsWith(".tmp"))
                  .forEach(fileNames::add);
-            }
-            Path inboxDir = userDir.resolve("inbox");
-            if (Files.exists(inboxDir)) {
-                try (var s = Files.list(inboxDir)) {
-                    s.filter(Files::isRegularFile)
-                     .map(p -> p.getFileName().toString())
-                     .filter(n -> !n.endsWith(".tmp") && !fileNames.contains(n))
-                     .forEach(fileNames::add);
-                }
             }
         } catch (IOException ignored) {}
         Collections.sort(fileNames);

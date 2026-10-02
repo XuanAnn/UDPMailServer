@@ -249,20 +249,19 @@ public class TestSuiteRunner {
             assertTrue(mail.getSenderIp() != null && !mail.getSenderIp().isEmpty(), "Sender IP captured: " + mail.getSenderIp());
             assertTrue(mail.getSenderPort() > 0, "Sender Port captured: " + mail.getSenderPort());
 
-            // Storage check: Verify welcome email and sent mail files in accounts/bob/
-            Path expectedWelcomeInbox = testDir.resolve("accounts").resolve("bob").resolve("inbox").resolve("new_email.txt");
-            assertTrue(Files.exists(expectedWelcomeInbox), "Welcome file exists in inbox at accounts/bob/inbox/new_email.txt");
+            // Storage check: Verify welcome email and mail files directly in accounts/bob/ and accounts/alice/ without subfolders
             Path rootNewEmail = testDir.resolve("accounts").resolve("bob").resolve("new_email.txt");
-            assertTrue(!Files.exists(rootNewEmail), "new_email.txt is not created directly in account root folder");
+            assertTrue(Files.exists(rootNewEmail), "new_email.txt exists directly in accounts/bob/new_email.txt");
+            assertTrue(!Files.exists(testDir.resolve("accounts").resolve("bob").resolve("inbox")), "inbox subfolder does not exist");
+            assertTrue(!Files.exists(testDir.resolve("accounts").resolve("bob").resolve("sent")), "sent subfolder does not exist");
+            assertTrue(!Files.exists(testDir.resolve("accounts").resolve("bob").resolve("drafts")), "drafts subfolder does not exist");
+            assertTrue(!Files.exists(testDir.resolve("accounts").resolve("bob").resolve("trash")), "trash subfolder does not exist");
 
-            Path expectedBobInboxFile = testDir.resolve("accounts").resolve("bob").resolve("inbox").resolve(mailId1 + ".txt");
-            assertTrue(Files.exists(expectedBobInboxFile), "Mail saved on disk at accounts/bob/inbox/" + mailId1 + ".txt");
+            Path expectedBobFile = testDir.resolve("accounts").resolve("bob").resolve(mailId1 + ".txt");
+            assertTrue(Files.exists(expectedBobFile), "Mail saved on disk at accounts/bob/" + mailId1 + ".txt");
 
-            Path expectedBobRootFile = testDir.resolve("accounts").resolve("bob").resolve(mailId1 + ".txt");
-            assertTrue(Files.exists(expectedBobRootFile), "Mail saved on disk at accounts/bob/" + mailId1 + ".txt");
-
-            Path expectedAliceSentFile = testDir.resolve("accounts").resolve("alice").resolve("sent").resolve(mailId1 + ".txt");
-            assertTrue(Files.exists(expectedAliceSentFile), "Mail saved on disk at accounts/alice/sent/" + mailId1 + ".txt");
+            Path expectedAliceFile = testDir.resolve("accounts").resolve("alice").resolve(mailId1 + ".txt");
+            assertTrue(Files.exists(expectedAliceFile), "Mail saved on disk at accounts/alice/" + mailId1 + ".txt");
 
             // Verify second email gets email_002
             Request sendReq2 = new Request(Protocol.CMD_SEND, tokenAlice)
@@ -273,8 +272,8 @@ public class TestSuiteRunner {
             assertTrue(sendRespEmail2.isOk(), "Send second email from Alice to Bob");
             String mailId2 = sendRespEmail2.get("mailId");
             assertEquals("email_002", mailId2, "Second Mail ID incremented sequentially to email_002");
-            Path expectedBobEmail2 = testDir.resolve("accounts").resolve("bob").resolve("inbox").resolve("email_002.txt");
-            assertTrue(Files.exists(expectedBobEmail2), "Second mail saved on disk at accounts/bob/inbox/email_002.txt");
+            Path expectedBobEmail2 = testDir.resolve("accounts").resolve("bob").resolve("email_002.txt");
+            assertTrue(Files.exists(expectedBobEmail2), "Second mail saved on disk at accounts/bob/email_002.txt");
 
             // F. Bob reads email
             Response readResp = client.read(tokenBob, Protocol.FOLDER_INBOX, mailId1);

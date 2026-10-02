@@ -121,10 +121,10 @@ public class ServerIntegrationTest {
         Response listBob = client.list(tokenBob, Protocol.FOLDER_INBOX);
         assertTrue(listBob.isOk());
         List<MailItem> bobMails = MailClient.parseMailList(listBob);
-        assertEquals(1, bobMails.size(), "Bob should only have 1 email despite duplicate request retry");
+        assertEquals(2, bobMails.size(), "Bob should have 2 emails (welcome email + Alice email)");
 
-        MailItem received = bobMails.get(0);
-        assertEquals(mailId1, received.getMailId());
+        MailItem received = bobMails.stream().filter(m -> mailId1.equals(m.getMailId())).findFirst().orElse(null);
+        assertNotNull(received);
         assertEquals("alice", received.getSender());
         assertEquals(subject, received.getSubject());
         assertFalse(received.isReadState());
@@ -137,7 +137,9 @@ public class ServerIntegrationTest {
         // 6. Check that Bob's email is now marked as read
         Response listBobAfterRead = client.list(tokenBob, Protocol.FOLDER_INBOX);
         List<MailItem> bobMailsAfterRead = MailClient.parseMailList(listBobAfterRead);
-        assertTrue(bobMailsAfterRead.get(0).isReadState());
+        MailItem readMail = bobMailsAfterRead.stream().filter(m -> mailId1.equals(m.getMailId())).findFirst().orElse(null);
+        assertNotNull(readMail);
+        assertTrue(readMail.isReadState());
 
         // 7. Check Alice's Sent box
         Response listAliceSent = client.list(tokenAlice, Protocol.FOLDER_SENT);
@@ -151,7 +153,7 @@ public class ServerIntegrationTest {
         assertTrue(moveResp.isOk());
 
         Response listBobInboxEmpty = client.list(tokenBob, Protocol.FOLDER_INBOX);
-        assertEquals(0, MailClient.parseMailList(listBobInboxEmpty).size());
+        assertEquals(1, MailClient.parseMailList(listBobInboxEmpty).size(), "Bob inbox still has welcome email");
 
         Response listBobTrash = client.list(tokenBob, Protocol.FOLDER_TRASH);
         assertEquals(1, MailClient.parseMailList(listBobTrash).size());

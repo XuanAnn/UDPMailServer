@@ -63,11 +63,8 @@ public class SidebarPanel extends JPanel {
         top.add(btnCompose, BorderLayout.CENTER);
         add(top, BorderLayout.NORTH);
 
-        // Folders List (Ant Design Navigation Menu style)
-        addFolder(Protocol.FOLDER_INBOX, "Hộp thư đến", "📥");
-        addFolder(Protocol.FOLDER_SENT, "Đã gửi", "📤");
-        addFolder(Protocol.FOLDER_DRAFTS, "Thư nháp", "📝");
-        addFolder(Protocol.FOLDER_TRASH, "Thùng rác", "🗑");
+        // Mailbox navigation menu (single flat mailbox)
+        addFolder("ALL", "Hộp thư", "📬");
 
         folderList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         folderList.setSelectedIndex(0);
@@ -152,6 +149,9 @@ public class SidebarPanel extends JPanel {
 
     public void setUnreadCount(String folderCode, int count) {
         FolderItem item = folderMap.get(folderCode);
+        if (item == null && folderMap.containsKey("ALL")) {
+            item = folderMap.get("ALL");
+        }
         if (item != null) {
             item.unreadCount = count;
             folderList.repaint();
@@ -168,6 +168,6 @@ public class SidebarPanel extends JPanel {
 
     public String getSelectedFolder() {
         FolderItem item = folderList.getSelectedValue();
-        return item != null ? item.folderCode : Protocol.FOLDER_INBOX;
+        return item != null ? item.folderCode : "ALL";
     }
 }
