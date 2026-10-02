@@ -52,4 +52,8 @@ public class AccountService {
     public List<Map<String, String>> getAllAccounts() {
         return accountRepository.getAllAccounts();
     }
+
+    public AccountRepository getAccountRepository() {
+        return accountRepository;
+    }
 }

@@ -36,15 +36,15 @@ public class Main {
         JPanel panel = new JPanel(new GridLayout(3, 1, 10, 10));
         panel.setBorder(new EmptyBorder(20, 25, 20, 25));
 
-        JLabel title = new JLabel("Select Application to Launch:", SwingConstants.CENTER);
+        JLabel title = new JLabel("Chọn ứng dụng:", SwingConstants.CENTER);
         title.setFont(title.getFont().deriveFont(Font.BOLD, 14f));
         panel.add(title);
 
-        JButton btnServer = new JButton("🖥  Launch Mail Server Manager");
+        JButton btnServer = new JButton("Mail Server Manager");
         btnServer.setFont(btnServer.getFont().deriveFont(Font.BOLD, 12.5f));
         btnServer.setBackground(new Color(240, 244, 250));
 
-        JButton btnClient = new JButton("📬  Launch Desktop Mail Client");
+        JButton btnClient = new JButton("Mail Client");
         btnClient.setFont(btnClient.getFont().deriveFont(Font.BOLD, 12.5f));
         btnClient.setBackground(new Color(235, 248, 235));
 

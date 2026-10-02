@@ -228,6 +228,7 @@ public class TestSuiteRunner {
             assertTrue(sendResp1.isOk(), "Send email from Alice to Bob");
             String mailId1 = sendResp1.get("mailId");
             assertTrue(mailId1 != null, "Mail ID generated");
+            assertEquals("email_001", mailId1, "Mail ID follows email_001 sequential format");
 
             // Send SAME request again (simulating network retry on dropped ACK)
             Response sendResp2 = client.getTransport().send(sendReq, "127.0.0.1", testPort);
@@ -255,8 +256,23 @@ public class TestSuiteRunner {
             Path expectedBobInboxFile = testDir.resolve("accounts").resolve("bob").resolve("inbox").resolve(mailId1 + ".txt");
             assertTrue(Files.exists(expectedBobInboxFile), "Mail saved on disk at accounts/bob/inbox/" + mailId1 + ".txt");
 
+            Path expectedBobRootFile = testDir.resolve("accounts").resolve("bob").resolve(mailId1 + ".txt");
+            assertTrue(Files.exists(expectedBobRootFile), "Mail saved on disk at accounts/bob/" + mailId1 + ".txt");
+
             Path expectedAliceSentFile = testDir.resolve("accounts").resolve("alice").resolve("sent").resolve(mailId1 + ".txt");
             assertTrue(Files.exists(expectedAliceSentFile), "Mail saved on disk at accounts/alice/sent/" + mailId1 + ".txt");
+
+            // Verify second email gets email_002
+            Request sendReq2 = new Request(Protocol.CMD_SEND, tokenAlice)
+                    .put("to", "bob")
+                    .put("subject", "Second email")
+                    .put("body", "Second body");
+            Response sendRespEmail2 = client.getTransport().send(sendReq2, "127.0.0.1", testPort);
+            assertTrue(sendRespEmail2.isOk(), "Send second email from Alice to Bob");
+            String mailId2 = sendRespEmail2.get("mailId");
+            assertEquals("email_002", mailId2, "Second Mail ID incremented sequentially to email_002");
+            Path expectedBobEmail2 = testDir.resolve("accounts").resolve("bob").resolve("inbox").resolve("email_002.txt");
+            assertTrue(Files.exists(expectedBobEmail2), "Second mail saved on disk at accounts/bob/inbox/email_002.txt");
 
             // F. Bob reads email
             Response readResp = client.read(tokenBob, Protocol.FOLDER_INBOX, mailId1);
@@ -269,10 +285,10 @@ public class TestSuiteRunner {
             MailItem readItem = bobMailsRead.stream().filter(m -> mailId1.equals(m.getMailId())).findFirst().orElse(null);
             assertTrue(readItem != null && readItem.isReadState(), "Email automatically marked read after reading");
 
-            // G. Alice Sent box contains sent email
+            // G. Alice Sent box contains sent emails
             Response listAliceSent = client.list(tokenAlice, Protocol.FOLDER_SENT);
             List<MailItem> aliceSent = MailClient.parseMailList(listAliceSent);
-            assertEquals(1, aliceSent.size(), "Alice Sent folder contains 1 mail");
+            assertEquals(2, aliceSent.size(), "Alice Sent folder contains 2 mails");
             assertEquals("bob", aliceSent.get(0).getRecipient(), "Alice Sent mail recipient is Bob");
 
             // H. Move to Trash & Permanent Delete

@@ -85,6 +85,7 @@ public class ServerManagerUI extends JFrame {
     };
     private final JTable accountTable = new JTable(accountTableModel);
 
+    private MailManagementPanel mailManagementPanel;
     private Timer statsTimer;
 
     public ServerManagerUI() {
@@ -236,7 +237,11 @@ public class ServerManagerUI extends JFrame {
         // Tab 1: Live User Status & Activity (Status Tổng Thể)
         tabbedPane.addTab("Người dùng", createOverallStatusPanel());
 
-        // Tab 2: Accounts & Credentials
+        // Tab 2: Mail Management (List User, List Folder, Emails per User)
+        mailManagementPanel = new MailManagementPanel(server);
+        tabbedPane.addTab("Quản lý thư", mailManagementPanel);
+
+        // Tab 3: Accounts & Credentials
         JPanel accountPanel = new JPanel(new BorderLayout(5, 5));
         accountPanel.setBackground(AntDesign.BG_CONTAINER);
         accountPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
@@ -257,9 +262,15 @@ public class ServerManagerUI extends JFrame {
         accountPanel.add(accScroll, BorderLayout.CENTER);
         tabbedPane.addTab("Tài khoản", accountPanel);
 
-        // Tab 3: Detailed Email Report & Metrics
+        // Tab 4: Detailed Email Report & Metrics
         JPanel reportPanel = createReportPanel();
         tabbedPane.addTab("Thống kê", reportPanel);
+
+        tabbedPane.addChangeListener(e -> {
+            if (tabbedPane.getSelectedComponent() == mailManagementPanel && mailManagementPanel != null) {
+                mailManagementPanel.refreshUsers();
+            }
+        });
 
         // Compact Terminal Panel (Thu nhỏ terminal console bên dưới)
         JPanel compactTerminal = createCompactTerminalPanel();
@@ -623,6 +634,9 @@ public class ServerManagerUI extends JFrame {
                     acc.getOrDefault("createdat", ""),
                     acc.getOrDefault("status", "ACTIVE")
             });
+        }
+        if (mailManagementPanel != null) {
+            mailManagementPanel.refreshUsers();
         }
     }
 

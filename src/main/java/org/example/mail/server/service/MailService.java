@@ -42,7 +42,7 @@ public class MailService {
             throw new IllegalArgumentException("Email body exceeds allowed limit");
         }
 
-        String mailId = UUID.randomUUID().toString();
+        String mailId = mailRepository.getNextMailId();
 
         // 1. Deliver to recipient INBOX
         MailItem inboxItem = new MailItem(mailId, sender, recipient, subject, body);
@@ -51,6 +51,9 @@ public class MailService {
         inboxItem.setFolder(MailFolder.INBOX);
         inboxItem.setReadState(false);
         mailRepository.saveMail(recipient, Protocol.FOLDER_INBOX, inboxItem);
+
+        // Save email content directly in recipient account directory (accounts/<recipient>/email_xxx.txt)
+        mailRepository.saveMailToAccountRoot(recipient, mailId, body);
 
         // 2. Save copy to sender SENT
         MailItem sentItem = new MailItem(mailId, sender, recipient, subject, body);
@@ -69,7 +72,7 @@ public class MailService {
         }
         String mailId = (existingMailId != null && !existingMailId.trim().isEmpty())
                 ? existingMailId.trim()
-                : UUID.randomUUID().toString();
+                : mailRepository.getNextMailId();
 
         MailItem draft = new MailItem(mailId, username, recipient, subject, body);
         draft.setFolder(MailFolder.DRAFTS);
@@ -133,5 +136,23 @@ public class MailService {
 
     public synchronized int countAllMails() {
         return mailRepository.countAllMails();
+    }
+
+    public MailRepository getMailRepository() {
+        return mailRepository;
+    }
+
+    public synchronized List<MailItem> listAccountRootMails(String username) {
+        if (!Validator.isValidUsername(username)) {
+            return List.of();
+        }
+        return mailRepository.listAccountRootMails(username);
+    }
+
+    public synchronized boolean deleteAccountRootMail(String username, String mailId) {
+        if (!Validator.isValidUsername(username) || !Validator.isValidMailId(mailId)) {
+            return false;
+        }
+        return mailRepository.deleteAccountRootMail(username, mailId);
     }
 }
