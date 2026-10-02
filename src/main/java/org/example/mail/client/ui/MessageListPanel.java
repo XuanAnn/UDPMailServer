@@ -4,6 +4,7 @@ import org.example.mail.client.model.MailItem;
 import org.example.mail.common.AntDesign;
 import org.example.mail.common.AntDesign.AntTag;
 import org.example.mail.common.AntDesign.TagColor;
+import org.example.mail.common.Protocol;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -18,6 +19,8 @@ public class MessageListPanel extends JPanel {
     private final JList<MailItem> mailJList = new JList<>(listModel);
     private final JLabel lblFolderTitle = new JLabel("Hộp thư đến");
     private final JLabel lblCount = new JLabel("0 thư");
+    private String currentFolder = Protocol.FOLDER_INBOX;
+    private String currentUsername = "";
     private final JTextField searchField = new JTextField() {
         @Override
         protected void paintComponent(Graphics g) {
@@ -143,6 +146,12 @@ public class MessageListPanel extends JPanel {
         return false;
     }
 
+    public void setCurrentContext(String folder, String username) {
+        this.currentFolder = folder != null ? folder.toUpperCase() : Protocol.FOLDER_INBOX;
+        this.currentUsername = username != null ? username : "";
+        mailJList.repaint();
+    }
+
     public MailItem getSelectedMail() {
         return mailJList.getSelectedValue();
     }
@@ -154,7 +163,7 @@ public class MessageListPanel extends JPanel {
     }
 
     // Custom Cell Renderer for Clean Ant Design List Items
-    private static class MailCellRenderer extends JPanel implements ListCellRenderer<MailItem> {
+    private class MailCellRenderer extends JPanel implements ListCellRenderer<MailItem> {
         private final JLabel lblSender = new JLabel();
         private final JLabel lblDate = new JLabel();
         private final JLabel lblSubject = new JLabel();
@@ -211,7 +220,19 @@ public class MessageListPanel extends JPanel {
                                                       boolean isSelected,
                                                       boolean cellHasFocus) {
             if (value != null) {
-                lblSender.setText(value.getSender() != null ? value.getSender() : "Unknown");
+                boolean isSent = Protocol.FOLDER_SENT.equalsIgnoreCase(currentFolder);
+                boolean isDraft = Protocol.FOLDER_DRAFTS.equalsIgnoreCase(currentFolder);
+                boolean isOutgoingTrash = Protocol.FOLDER_TRASH.equalsIgnoreCase(currentFolder)
+                        && currentUsername != null && !currentUsername.isEmpty()
+                        && currentUsername.equalsIgnoreCase(value.getSender());
+
+                if (isSent || isDraft || isOutgoingTrash) {
+                    String recipient = value.getRecipient();
+                    lblSender.setText("Đến: " + (recipient != null && !recipient.isEmpty() ? recipient : "(Chưa có)"));
+                } else {
+                    lblSender.setText(value.getSender() != null ? value.getSender() : "Unknown");
+                }
+
                 lblDate.setText(value.getCreatedAt() != null ? value.getCreatedAt() : "");
                 String fileName = value.getMailId() != null
                         ? (value.getMailId().endsWith(".txt") ? value.getMailId() : value.getMailId() + ".txt")

@@ -1,6 +1,7 @@
 package org.example.mail.server.core;
 
 import org.example.mail.client.model.MailItem;
+import org.example.mail.common.NetworkUtils;
 import org.example.mail.common.Protocol;
 import org.example.mail.common.Request;
 import org.example.mail.common.Response;
@@ -120,7 +121,18 @@ public class RequestDispatcher {
             return Response.status(reqId, Protocol.STATUS_INVALID, "Missing command");
         }
 
-        String ip = clientAddress != null ? clientAddress.getHostAddress() : "127.0.0.1";
+        String rawIp = clientAddress != null ? clientAddress.getHostAddress() : "127.0.0.1";
+        String clientReportedIp = request.get("clientIp");
+        String ip = rawIp;
+
+        if (clientReportedIp != null && !clientReportedIp.trim().isEmpty() && !clientReportedIp.equals("127.0.0.1") && !clientReportedIp.startsWith("127.")) {
+            ip = clientReportedIp.trim();
+        } else if (rawIp.equals("127.0.0.1") || rawIp.startsWith("127.") || rawIp.equals("0:0:0:0:0:0:0:1")) {
+            String lanIp = NetworkUtils.getLocalIPv4Address();
+            if (lanIp != null && !lanIp.isEmpty() && !lanIp.equals("127.0.0.1")) {
+                ip = lanIp;
+            }
+        }
 
         switch (cmd) {
             case Protocol.CMD_PING -> {

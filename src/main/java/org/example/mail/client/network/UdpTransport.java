@@ -1,6 +1,7 @@
 package org.example.mail.client.network;
 
 import org.example.mail.common.MessageCodec;
+import org.example.mail.common.NetworkUtils;
 import org.example.mail.common.Protocol;
 import org.example.mail.common.Request;
 import org.example.mail.common.Response;
@@ -104,6 +105,13 @@ public class UdpTransport {
 
         if (request.getRequestId() == null || request.getRequestId().isEmpty()) {
             request.setRequestId(java.util.UUID.randomUUID().toString());
+        }
+
+        if (request.get("clientIp") == null || request.get("clientIp").isEmpty()) {
+            String myIp = NetworkUtils.getLocalIPv4Address();
+            if (myIp != null && !myIp.isEmpty()) {
+                request.put("clientIp", myIp);
+            }
         }
 
         String rawReq = MessageCodec.encodeRequest(request);

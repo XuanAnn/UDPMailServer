@@ -484,8 +484,12 @@ public class MailManagementPanel extends JPanel {
                     bodySnippet = bodySnippet.substring(0, 50) + "...";
                 }
                 String fileName = m.getMailId().endsWith(".txt") ? m.getMailId() : m.getMailId() + ".txt";
-                String senderIp = (m.getSenderIp() != null && !m.getSenderIp().isEmpty() ? m.getSenderIp() : "127.0.0.1")
-                        + (m.getSenderPort() > 0 ? (":" + m.getSenderPort()) : "");
+                String sIp = m.getSenderIp();
+                if (sIp == null || sIp.isEmpty() || sIp.equals("127.0.0.1") || sIp.startsWith("127.")) {
+                    String lan = org.example.mail.common.NetworkUtils.getLocalIPv4Address();
+                    sIp = (lan != null && !lan.isEmpty() && !lan.equals("127.0.0.1")) ? lan : "127.0.0.1";
+                }
+                String senderIp = sIp + (m.getSenderPort() > 0 ? (":" + m.getSenderPort()) : "");
 
                 mailTableModel.addRow(new Object[]{
                         m.getMailId(),
@@ -511,8 +515,12 @@ public class MailManagementPanel extends JPanel {
 
     private void showMailPreview(MailItem item) {
         lblPreviewSubject.setText(item.getSubject() != null && !item.getSubject().isEmpty() ? item.getSubject() : "(Không có tiêu đề)");
-        String ipStr = (item.getSenderIp() != null && !item.getSenderIp().isEmpty() ? item.getSenderIp() : "127.0.0.1")
-                + (item.getSenderPort() > 0 ? (":" + item.getSenderPort()) : "");
+        String sIp = item.getSenderIp();
+        if (sIp == null || sIp.isEmpty() || sIp.equals("127.0.0.1") || sIp.startsWith("127.")) {
+            String lan = org.example.mail.common.NetworkUtils.getLocalIPv4Address();
+            sIp = (lan != null && !lan.isEmpty() && !lan.equals("127.0.0.1")) ? lan : "127.0.0.1";
+        }
+        String ipStr = sIp + (item.getSenderPort() > 0 ? (":" + item.getSenderPort()) : "");
         String meta = String.format("Mã: %s  |  Từ: %s  |  IP: %s  |  Đến: %s  |  Thời gian: %s",
                 item.getMailId(),
                 item.getSender() != null ? item.getSender() : "-",

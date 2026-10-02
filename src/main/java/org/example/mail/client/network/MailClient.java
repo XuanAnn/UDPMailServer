@@ -1,6 +1,7 @@
 package org.example.mail.client.network;
 
 import org.example.mail.client.model.MailItem;
+import org.example.mail.common.NetworkUtils;
 import org.example.mail.common.Protocol;
 import org.example.mail.common.Request;
 import org.example.mail.common.Response;
@@ -62,7 +63,8 @@ public class MailClient {
         Request req = new Request(Protocol.CMD_SEND, token)
                 .put("to", to)
                 .put("subject", subject)
-                .put("body", body);
+                .put("body", body)
+                .put("clientIp", NetworkUtils.getLocalIPv4Address());
         return transport.send(req, host, port);
     }
 

@@ -102,9 +102,13 @@ public class MailRepository {
         // Also put in inbox as welcome mail
         Path inboxNewEmail = inbox.resolve("new_email.txt");
         if (!Files.exists(inboxNewEmail)) {
+            String welcomeSenderIp = org.example.mail.common.NetworkUtils.getLocalIPv4Address();
+            if (welcomeSenderIp == null || welcomeSenderIp.isEmpty()) {
+                welcomeSenderIp = "127.0.0.1";
+            }
             String formatted = "Id: new_email\n" +
                                "From: System\n" +
-                               "Sender-IP: 127.0.0.1\n" +
+                               "Sender-IP: " + welcomeSenderIp + "\n" +
                                "Sender-Port: 5000\n" +
                                "To: " + username + "\n" +
                                "Subject: Thank you for using this service. we hope that you will feel comfortabl........\n" +
@@ -136,10 +140,18 @@ public class MailRepository {
         Path targetFile = folderDir.resolve(baseId + ".txt");
         Path tmpFile = folderDir.resolve(baseId + ".tmp");
 
+        String sIp = mail.getSenderIp();
+        if (sIp == null || sIp.isEmpty() || sIp.equals("127.0.0.1") || sIp.startsWith("127.")) {
+            String lan = org.example.mail.common.NetworkUtils.getLocalIPv4Address();
+            if (lan != null && !lan.isEmpty()) sIp = lan;
+            else sIp = "127.0.0.1";
+            mail.setSenderIp(sIp);
+        }
+
         StringBuilder sb = new StringBuilder();
         sb.append("Id: ").append(mail.getMailId()).append("\n");
         sb.append("From: ").append(mail.getSender() != null ? mail.getSender() : "").append("\n");
-        sb.append("Sender-IP: ").append(mail.getSenderIp() != null ? mail.getSenderIp() : "127.0.0.1").append("\n");
+        sb.append("Sender-IP: ").append(sIp).append("\n");
         sb.append("Sender-Port: ").append(mail.getSenderPort()).append("\n");
         sb.append("To: ").append(mail.getRecipient() != null ? mail.getRecipient() : "").append("\n");
         sb.append("Subject: ").append(mail.getSubject() != null ? mail.getSubject() : "").append("\n");
@@ -343,7 +355,8 @@ public class MailRepository {
             String mailId = fileName.endsWith(".txt") ? fileName.substring(0, fileName.length() - 4) : fileName;
             mail.setMailId(mailId);
             mail.setSender("System");
-            mail.setSenderIp("127.0.0.1");
+            String defLan = org.example.mail.common.NetworkUtils.getLocalIPv4Address();
+            mail.setSenderIp(defLan != null && !defLan.isEmpty() ? defLan : "127.0.0.1");
             mail.setSenderPort(5000);
             mail.setRecipient("Me");
             mail.setSubject("Thank you for using this service. we hope that you will feel comfortabl........");
@@ -366,7 +379,16 @@ public class MailRepository {
                 switch (key) {
                     case "id" -> mail.setMailId(val);
                     case "from" -> mail.setSender(val);
-                    case "sender-ip" -> mail.setSenderIp(val);
+                    case "sender-ip" -> {
+                        String parsedIp = val;
+                        if (parsedIp.equals("127.0.0.1") || parsedIp.startsWith("127.")) {
+                            String lan = org.example.mail.common.NetworkUtils.getLocalIPv4Address();
+                            if (lan != null && !lan.isEmpty() && !lan.equals("127.0.0.1")) {
+                                parsedIp = lan;
+                            }
+                        }
+                        mail.setSenderIp(parsedIp);
+                    }
                     case "sender-port" -> {
                         try {
                             mail.setSenderPort(Integer.parseInt(val));

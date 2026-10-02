@@ -62,6 +62,9 @@ public class MainFrame extends JFrame {
         initUI();
         setupHeartbeat();
         setupRealtimeSystem();
+        String currentUsername = authService.getCurrentSession() != null ? authService.getCurrentSession().getUsername() : "";
+        messageListPanel.setCurrentContext(activeFolder, currentUsername);
+        messageListPanel.setFolderTitle(getFolderDisplayName(activeFolder));
         refreshCurrentFolder();
     }
 
@@ -191,7 +194,9 @@ public class MainFrame extends JFrame {
         // 4. Connect Callbacks
         sidebarPanel.setOnFolderSelected(folder -> {
             this.activeFolder = folder;
-            messageListPanel.setFolderTitle(capitalize(folder));
+            String user = authService.getCurrentSession() != null ? authService.getCurrentSession().getUsername() : "";
+            messageListPanel.setCurrentContext(folder, user);
+            messageListPanel.setFolderTitle(getFolderDisplayName(folder));
             readingPanel.clear();
             loadFolderEmails(folder, false);
         });
@@ -353,6 +358,17 @@ public class MainFrame extends JFrame {
         if (onLogoutCallback != null) {
             onLogoutCallback.run();
         }
+    }
+
+    private String getFolderDisplayName(String folderCode) {
+        if (folderCode == null) return "Hộp thư đến";
+        return switch (folderCode.toUpperCase()) {
+            case Protocol.FOLDER_INBOX -> "Hộp thư đến";
+            case Protocol.FOLDER_SENT -> "Đã gửi";
+            case Protocol.FOLDER_DRAFTS -> "Thư nháp";
+            case Protocol.FOLDER_TRASH -> "Thùng rác";
+            default -> capitalize(folderCode);
+        };
     }
 
     private String capitalize(String text) {

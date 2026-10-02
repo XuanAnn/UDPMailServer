@@ -179,7 +179,11 @@ public class ReadingPanel extends JPanel {
 
         // Format: sender + [IP: ... , Port: ...]
         String senderStr = (mail.getSender() != null ? mail.getSender() : "Unknown");
-        String senderIp = (mail.getSenderIp() != null && !mail.getSenderIp().isEmpty()) ? mail.getSenderIp() : "127.0.0.1";
+        String senderIp = mail.getSenderIp();
+        if (senderIp == null || senderIp.isEmpty() || senderIp.equals("127.0.0.1") || senderIp.startsWith("127.")) {
+            String lan = org.example.mail.common.NetworkUtils.getLocalIPv4Address();
+            senderIp = (lan != null && !lan.isEmpty() && !lan.equals("127.0.0.1")) ? lan : "127.0.0.1";
+        }
         int senderPort = mail.getSenderPort();
         if (senderPort > 0) {
             senderStr += "  [IP: " + senderIp + ", Port: " + senderPort + "]";
@@ -254,7 +258,11 @@ public class ReadingPanel extends JPanel {
         if (currentMail == null) return;
         try {
             String senderStr = (currentMail.getSender() != null ? currentMail.getSender() : "Unknown");
-            String senderIp = (currentMail.getSenderIp() != null) ? currentMail.getSenderIp() : "127.0.0.1";
+            String senderIp = currentMail.getSenderIp();
+            if (senderIp == null || senderIp.isEmpty() || senderIp.equals("127.0.0.1") || senderIp.startsWith("127.")) {
+                String lan = org.example.mail.common.NetworkUtils.getLocalIPv4Address();
+                senderIp = (lan != null && !lan.isEmpty() && !lan.equals("127.0.0.1")) ? lan : "127.0.0.1";
+            }
             int senderPort = currentMail.getSenderPort();
             if (senderPort > 0) {
                 senderStr += "  [IP: " + senderIp + ", Port: " + senderPort + "]";
