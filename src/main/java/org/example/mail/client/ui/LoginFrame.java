@@ -24,13 +24,13 @@ public class LoginFrame extends JFrame {
 
     // Login Form Fields
     private final JTextField txtLoginUser = new JTextField();
-    private final JPasswordField txtLoginPass = new JPasswordField();
+    private final JTextField txtLoginPass = new JTextField();
     private final AntButton btnLogin = AntDesign.createPrimaryButton("Đăng nhập");
 
     // Register Form Fields
     private final JTextField txtRegUser = new JTextField();
-    private final JPasswordField txtRegPass = new JPasswordField();
-    private final JPasswordField txtRegPassConfirm = new JPasswordField();
+    private final JTextField txtRegPass = new JTextField();
+    private final JTextField txtRegPassConfirm = new JTextField();
     private final AntButton btnRegister = AntDesign.createSuccessButton("Đăng ký");
 
     private final JLabel lblStatus = new JLabel(" ", SwingConstants.CENTER);
@@ -280,7 +280,7 @@ public class LoginFrame extends JFrame {
     private void doLogin() {
         updateClientAddress();
         String user = txtLoginUser.getText().trim();
-        String pass = new String(txtLoginPass.getPassword());
+        String pass = txtLoginPass.getText().trim();
 
         if (user.isEmpty() || pass.isEmpty()) {
             lblStatus.setText("Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu");
@@ -322,8 +322,8 @@ public class LoginFrame extends JFrame {
     private void doRegister() {
         updateClientAddress();
         String user = txtRegUser.getText().trim();
-        String pass = new String(txtRegPass.getPassword());
-        String pass2 = new String(txtRegPassConfirm.getPassword());
+        String pass = txtRegPass.getText().trim();
+        String pass2 = txtRegPassConfirm.getText().trim();
 
         if (!Validator.isValidUsername(user)) {
             lblStatus.setText("Tên đăng nhập không hợp lệ (3-30 ký tự a-z, 0-9, _)");
